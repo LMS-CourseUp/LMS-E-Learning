@@ -635,7 +635,17 @@ body, :root[data-theme="dark"] body {
   .code-pane-heading > span:last-child { display: inline-flex; align-items: center; gap: 7px; }
   .code-pane-heading i { width: 1px; height: 10px; background: #586764; }
   .code-editor-body { position: relative; min-height: 0; flex: 1; overflow: hidden; }
-  .code-editor-body .cm-editor { height: 100%; }
+  .code-editor-body .CodeMirror,
+  .code-editor-body .cm-editor { height: 100%; background: #10191d; color: #edf5f0; font-family: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace; font-size: 13px; line-height: 1.7; }
+  .code-editor-body .CodeMirror-scroll,
+  .code-editor-body .cm-scroller { font-family: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace; line-height: 1.7; }
+  .code-editor-body .CodeMirror-gutters,
+  .code-editor-body .cm-gutters { border-right: 1px solid #29383b; background: #10191d; color: #8aa09c; }
+  .code-editor-body .CodeMirror-cursor,
+  .code-editor-body .cm-cursor { border-left-color: #7fe0b0; }
+  .code-editor-body .CodeMirror-selected,
+  .code-editor-body .cm-selectionBackground { background: rgba(118, 214, 167, 0.18); }
+  .code-editor-body .CodeMirror-focused,
   .code-editor-body .cm-focused { outline: none; }
   .code-editor-loading { position: absolute; inset: 0; display: grid; place-items: center; color: #a8b8b1; background: #10191d; font-size: 12px; }
   .code-editor-status { display: flex; min-height: 24px; padding: 0 11px; align-items: center; justify-content: space-between; border-top: 1px solid #29383b; color: #80918e; background: #152125; font-size: 9px; }

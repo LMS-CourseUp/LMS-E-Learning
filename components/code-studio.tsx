@@ -1,14 +1,24 @@
 "use client";
 
-import CodeMirror from "@uiw/react-codemirror";
 import { useRouter } from "next/navigation";
-import { css } from "@codemirror/lang-css";
-import { html } from "@codemirror/lang-html";
-import { javascript } from "@codemirror/lang-javascript";
-import { php } from "@codemirror/lang-php";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView } from "@codemirror/view";
 import ReactMarkdown from "react-markdown";
+import { UnControlled as CodeMirror } from "react-codemirror2";
+import "codemirror/lib/codemirror.css";
+import "codemirror/theme/material-darker.css";
+import "codemirror/addon/edit/closebrackets";
+import "codemirror/addon/edit/matchbrackets";
+import "codemirror/addon/fold/foldgutter";
+import "codemirror/addon/fold/brace-fold";
+import "codemirror/addon/selection/active-line";
+import "codemirror/mode/css/css";
+import "codemirror/mode/htmlmixed/htmlmixed";
+import "codemirror/mode/javascript/javascript";
+import "codemirror/mode/php/php";
+import "codemirror/mode/xml/xml";
+import "codemirror/mode/markdown/markdown";
+import "codemirror/mode/python/python";
+import "codemirror/mode/clike/clike";
+import "codemirror/mode/sql/sql";
 import { ArrowLeft, Bot, Braces, Check, ChevronDown, ChevronRight, CircleAlert, Code2, FileCode2, FileJson2, FilePlus2, FileText, Folder, FolderOpen, FolderPlus, Monitor, PanelRight, Play, Save, Search, Send, Smartphone, Sparkles, Terminal, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type PointerEvent, type ReactNode } from "react";
 import { apiRequest } from "@/lib/browser-api";
@@ -30,20 +40,6 @@ const starterFiles: WorkspaceFile[] = [
 ];
 
 const allowedExtensions = new Set(["html", "htm", "css", "js", "mjs", "cjs", "jsx", "ts", "tsx", "php", "json"]);
-const codeTheme = EditorView.theme({
-  "&": { height: "100%", fontSize: "13px", color: "var(--code-editor-foreground)", backgroundColor: "var(--code-editor-background)" },
-  ".cm-scroller": { fontFamily: "'Cascadia Code', 'SFMono-Regular', Consolas, monospace", lineHeight: "1.7", overflow: "auto" },
-  ".cm-gutters": { border: "none", color: "var(--code-editor-foreground)", backgroundColor: "var(--code-editor-background)" },
-  ".cm-activeLine": { backgroundColor: "var(--code-editor-active-line)" },
-  ".cm-activeLineGutter": { backgroundColor: "var(--code-editor-active-line)" },
-}, { dark: true });
-const lightCodeTheme = EditorView.theme({
-  "&": { height: "100%", fontSize: "13px", color: "var(--code-editor-foreground)", backgroundColor: "var(--code-editor-background)" },
-  ".cm-scroller": { fontFamily: "'Cascadia Code', 'SFMono-Regular', Consolas, monospace", lineHeight: "1.7", overflow: "auto" },
-  ".cm-gutters": { border: "none", color: "var(--code-editor-foreground)", backgroundColor: "var(--code-editor-background)" },
-  ".cm-activeLine": { backgroundColor: "var(--code-editor-active-line)" },
-  ".cm-activeLineGutter": { backgroundColor: "var(--code-editor-active-line)" },
-}, { dark: false });
 
 function extensionOf(name: string) {
   return name.split(".").at(-1)?.toLowerCase() ?? "";
@@ -127,13 +123,19 @@ function filterExplorerTree(nodes: ExplorerNode[], query: string): ExplorerNode[
   return filtered;
 }
 
-function editorExtensions(name: string) {
+function editorModeForName(name: string) {
   const extension = extensionOf(name);
-  if (extension === "html" || extension === "htm") return [html()];
-  if (extension === "css") return [css()];
-  if (extension === "php") return [php()];
-  if (["jsx", "tsx"].includes(extension)) return [javascript({ jsx: true })];
-  return [javascript()];
+  if (extension === "html" || extension === "htm") return "htmlmixed";
+  if (extension === "css") return "css";
+  if (extension === "php") return "php";
+  if (extension === "json") return "javascript";
+  if (extension === "md" || extension === "markdown") return "markdown";
+  if (["tsx", "jsx", "js", "mjs", "cjs", "ts"].includes(extension)) return "javascript";
+  if (extension === "py") return "python";
+  if (["java", "c", "cpp", "cc", "h", "hpp"].includes(extension)) return "text/x-c++src";
+  if (extension === "sql") return "sql";
+  if (extension === "xml") return "xml";
+  return "javascript";
 }
 
 function safeInlineCode(code: string) {
@@ -766,7 +768,31 @@ export default function CodeStudio() {
             <div className="code-editor-tab-actions"><span className="code-mode-label"><Braces size={13} />{modeLabel}</span><button type="button" className="code-ai-icon" onClick={openAiPanel} title="Tanya AI tentang project" aria-label="Buka AI assistant"><Sparkles size={14} /></button></div>
           </div>
           <div className="code-editor-body">
-            <CodeMirror value={activeFile?.content ?? ""} height="100%" theme={editorDarkMode ? oneDark : "light"} extensions={[...editorExtensions(activeFile?.name ?? "js"), editorDarkMode ? codeTheme : lightCodeTheme]} onChange={updateActiveContent} basicSetup={{ foldGutter: true, bracketMatching: true, closeBrackets: true, autocompletion: true, highlightActiveLine: true }} aria-label={`Editor ${activeFile?.name ?? "kode"}`} />
+            <CodeMirror
+              value={activeFile?.content ?? ""}
+              className="code-editor-cm"
+              options={{
+                mode: editorModeForName(activeFile?.name ?? "js"),
+                theme: editorDarkMode ? "material-darker" : "default",
+                lineNumbers: true,
+                lineWrapping: true,
+                tabSize: 2,
+                indentUnit: 2,
+                foldGutter: true,
+                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+                matchBrackets: true,
+                autoCloseBrackets: true,
+                styleActiveLine: true,
+                extraKeys: {
+                  "Ctrl-/": "toggleComment",
+                  "Cmd-/": "toggleComment",
+                  "Tab": (_cm: any) => _cm.execCommand("indentMore"),
+                  "Shift-Tab": (_cm: any) => _cm.execCommand("indentLess"),
+                },
+              }}
+              onChange={(_, _editor, value) => updateActiveContent(value)}
+              aria-label={`Editor ${activeFile?.name ?? "kode"}`}
+            />
             {!ready && <div className="code-editor-loading">Menyiapkan workspace...</div>}
           </div>
           <div className="code-editor-status"><span>{activeFile?.name ?? ""}</span><span>{activeExtension.toUpperCase()}</span><span>UTF-8</span><span>LF</span><span>Spaces: 2</span></div>

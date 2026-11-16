@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import OneCompilerEditor from "@/components/onecompiler-editor";
+import CodeStudioShell from "@/components/code-studio-shell";
 
 export const metadata: Metadata = {
 	title: "Code Editor",
-	description: "Online code editor for Java, HTML, CSS, JavaScript, and more.",
+	description: "Online code editor for HTML, CSS, JavaScript, PHP, and React projects.",
 };
 
 export default function CodePage() {
-	return <OneCompilerEditor />;
+	return <CodeStudioShell />;
 }
