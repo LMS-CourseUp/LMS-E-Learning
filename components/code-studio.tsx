@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
-import { UnControlled as CodeMirror } from "react-codemirror2";
+import CodeMirror from "codemirror";
 import "codemirror/lib/codemirror.css";
 import "codemirror/theme/material-darker.css";
 import "codemirror/addon/edit/closebrackets";
@@ -179,6 +179,65 @@ function defaultFileContent(name: string) {
 
 function createPhpDocument(htmlText: string) {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"></head><body>${htmlText}</body></html>`;
+}
+
+function CodeMirrorEditor({ value, mode, theme, onChange, ariaLabel }: { value: string; mode: string; theme: string; onChange: (value: string) => void; ariaLabel: string }) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<CodeMirror.Editor | null>(null);
+  const onChangeRef = useRef(onChange);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const editor = CodeMirror.fromTextArea(textarea, {
+      lineNumbers: true,
+      lineWrapping: true,
+      tabSize: 2,
+      indentUnit: 2,
+      foldGutter: true,
+      gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+      matchBrackets: true,
+      autoCloseBrackets: true,
+      styleActiveLine: true,
+      extraKeys: {
+        "Ctrl-/": "toggleComment",
+        "Cmd-/": "toggleComment",
+        "Tab": (instance) => instance.execCommand("indentMore"),
+        "Shift-Tab": (instance) => instance.execCommand("indentLess"),
+      },
+    });
+    const handleChange = (instance: CodeMirror.Editor) => onChangeRef.current(instance.getValue());
+
+    editor.getWrapperElement().classList.add("code-editor-cm");
+    editor.on("change", handleChange);
+    editorRef.current = editor;
+
+    return () => {
+      editor.off("change", handleChange);
+      editor.toTextArea();
+      editorRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.setOption("mode", mode);
+    editor.setOption("theme", theme);
+    editor.getWrapperElement().setAttribute("aria-label", ariaLabel);
+  }, [ariaLabel, mode, theme]);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (editor && editor.getValue() !== value) editor.setValue(value);
+  }, [value]);
+
+  return <textarea ref={textareaRef} defaultValue={value} aria-label={ariaLabel} />;
 }
 
 export default function CodeStudio() {
@@ -768,30 +827,12 @@ export default function CodeStudio() {
             <div className="code-editor-tab-actions"><span className="code-mode-label"><Braces size={13} />{modeLabel}</span><button type="button" className="code-ai-icon" onClick={openAiPanel} title="Tanya AI tentang project" aria-label="Buka AI assistant"><Sparkles size={14} /></button></div>
           </div>
           <div className="code-editor-body">
-            <CodeMirror
+            <CodeMirrorEditor
               value={activeFile?.content ?? ""}
-              className="code-editor-cm"
-              options={{
-                mode: editorModeForName(activeFile?.name ?? "js"),
-                theme: editorDarkMode ? "material-darker" : "default",
-                lineNumbers: true,
-                lineWrapping: true,
-                tabSize: 2,
-                indentUnit: 2,
-                foldGutter: true,
-                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
-                matchBrackets: true,
-                autoCloseBrackets: true,
-                styleActiveLine: true,
-                extraKeys: {
-                  "Ctrl-/": "toggleComment",
-                  "Cmd-/": "toggleComment",
-                  "Tab": (_cm: any) => _cm.execCommand("indentMore"),
-                  "Shift-Tab": (_cm: any) => _cm.execCommand("indentLess"),
-                },
-              }}
-              onChange={(_, _editor, value) => updateActiveContent(value)}
-              aria-label={`Editor ${activeFile?.name ?? "kode"}`}
+              mode={editorModeForName(activeFile?.name ?? "js")}
+              theme={editorDarkMode ? "material-darker" : "default"}
+              onChange={updateActiveContent}
+              ariaLabel={`Editor ${activeFile?.name ?? "kode"}`}
             />
             {!ready && <div className="code-editor-loading">Menyiapkan workspace...</div>}
           </div>
