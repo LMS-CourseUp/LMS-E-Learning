@@ -10,7 +10,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "CourseUp | Solusi Belajar Modern",
+  title: "CourseUp | Solusi Belajar Modern Santai",
   description: "Materi, latihan soal, forum diskusi, dan progres belajar CourseUp.",
   icons: {
     icon: "/course-up-logo.png",
