@@ -2,13 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays, Eye, FileJson, Plus, Search, UserRound } from "lucide-react";
+import { CalendarDays, Eye, FileJson, Plus, Search, Trash2, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { MotionButton } from "@/components/ui/motion";
 import { apiRequest } from "@/lib/browser-api";
 
-type Account = { uuid: string; username: string; email: string; full_name: string; profile_photo: string; role: "admin" | "student"; account_status: "active" | "suspended"; last_active_at: string | null; created_at: string };
+type Account = { uuid: string; username: string; email: string; full_name: string; profile_photo: string; role: "admin" | "student"; account_status: "active" | "suspended"; last_active_at: string | null; created_at: string; is_current_user: boolean };
 type AccountImportRecord = { fullName: string; email: string; password: string; role: "admin" | "student"; username: string; rowNumber: number; errors: string[] };
 
 function generatedUsername(email: string) {
@@ -27,6 +27,8 @@ export default function AccountsPage() {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importPreview, setImportPreview] = useState<AccountImportRecord[] | null>(null);
   const [importBusy, setImportBusy] = useState(false);
+  const [selectedAccountUuids, setSelectedAccountUuids] = useState<Set<string>>(new Set());
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   async function refresh() {
     const result = await apiRequest<{ accounts: Account[] }>("/api/v1/admin/accounts");
@@ -54,6 +56,61 @@ export default function AccountsPage() {
     const term = search.trim().toLocaleLowerCase("id-ID");
     return accounts.filter((account) => !term || `${account.username} ${account.email} ${account.full_name}`.toLocaleLowerCase("id-ID").includes(term));
   }, [accounts, search]);
+  const selectableVisibleAccounts = visibleAccounts.filter((account) => !account.is_current_user);
+  const selectedAccountCount = accounts.filter((account) => selectedAccountUuids.has(account.uuid)).length;
+  const selectedVisibleCount = selectableVisibleAccounts.filter((account) => selectedAccountUuids.has(account.uuid)).length;
+  const allVisibleSelected = selectableVisibleAccounts.length > 0 && selectedVisibleCount === selectableVisibleAccounts.length;
+
+  function toggleVisibleSelection() {
+    setSelectedAccountUuids((current) => {
+      const next = new Set(current);
+      for (const account of selectableVisibleAccounts) {
+        if (allVisibleSelected) next.delete(account.uuid);
+        else next.add(account.uuid);
+      }
+      return next;
+    });
+  }
+
+  function toggleAccountSelection(uuid: string, selected: boolean) {
+    setSelectedAccountUuids((current) => {
+      const next = new Set(current);
+      if (selected) next.add(uuid);
+      else next.delete(uuid);
+      return next;
+    });
+  }
+
+  async function deleteSelectedAccounts() {
+    const selectedAccounts = accounts.filter((account) => selectedAccountUuids.has(account.uuid));
+    if (!selectedAccounts.length || selectedAccounts.length > 1000) {
+      setError("Pilih maksimal 1000 akun untuk dihapus sekaligus.");
+      return;
+    }
+
+    const adminCount = selectedAccounts.filter((account) => account.role === "admin").length;
+    const adminWarning = adminCount ? `\nAkun Admin yang dipilih: ${adminCount}.` : "";
+    if (!window.confirm(`Hapus permanen ${selectedAccounts.length} akun terpilih?${adminWarning}\nTindakan ini tidak dapat dibatalkan.`)) return;
+
+    setDeleteBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const result = await apiRequest<{ deleted: number; deleted_uuids: string[] }>("/api/v1/admin/accounts", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ account_uuids: selectedAccounts.map((account) => account.uuid) }),
+      });
+      const deleted = new Set(result.deleted_uuids);
+      setAccounts((current) => current.filter((account) => !deleted.has(account.uuid)));
+      setSelectedAccountUuids(new Set());
+      setNotice(`${result.deleted} akun berhasil dihapus.`);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Akun gagal dihapus.");
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
 
   async function createAccount(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -202,7 +259,11 @@ export default function AccountsPage() {
       </div>}
     </section>
     <section className="surface surface-pad admin-section"><div className="admin-section-heading"><div><span className="list-meta">DIREKTORI</span><h2 className="surface-title">Semua akun</h2></div><span className="admin-count">{visibleAccounts.length} dari {accounts.length}</span></div><label className="account-search"><Search size={16} /><input className="input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari nama, username, atau email" aria-label="Cari akun" /></label>
-      {visibleAccounts.length ? <div className="account-list">{visibleAccounts.map((account) => <article className="account-row" key={account.uuid}><div className="account-identity">{account.profile_photo ? <Image className="account-avatar" src={account.profile_photo} alt="" width={40} height={40} unoptimized /> : <span className="account-avatar account-avatar-empty"><UserRound size={17} /></span>}<div className="account-copy"><strong>{account.full_name || account.username}</strong><span>@{account.username} · {account.email}</span><small><CalendarDays size={13} />Terdaftar {new Date(account.created_at).toLocaleDateString("id-ID", { dateStyle: "medium" })}{account.last_active_at ? ` · Login ${new Date(account.last_active_at).toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" })}` : " · Belum pernah login"}</small></div></div><div className="account-tags"><span className={`account-role account-role-${account.role}`}>{account.role === "admin" ? "Admin" : "Student"}</span><span className={`account-state account-state-${account.account_status}`}>{account.account_status === "active" ? "Aktif" : "Dinonaktifkan"}</span></div><div className="admin-row-actions"><Link href={`/admin/akun/detail/${account.uuid}`} className="button button-secondary button-small" aria-label={`Detail akun ${account.username}`}><Eye size={14} />Detail</Link></div></article>)}</div> : <p className="empty-state">{accounts.length ? "Tidak ada akun yang cocok." : "Belum ada akun."}</p>}
+      <div className="account-bulk-toolbar">
+        <label className="account-select-all"><input type="checkbox" checked={allVisibleSelected} ref={(element) => { if (element) element.indeterminate = selectedVisibleCount > 0 && !allVisibleSelected; }} disabled={!selectableVisibleAccounts.length || deleteBusy} onChange={toggleVisibleSelection} aria-label="Pilih semua akun yang tampil" />Pilih semua yang tampil</label>
+        <div className="account-bulk-actions"><span>{selectedAccountCount} dipilih</span><button type="button" className="button button-danger button-small" disabled={!selectedAccountCount || deleteBusy} onClick={() => void deleteSelectedAccounts()}><Trash2 size={14} />{deleteBusy ? "Menghapus..." : "Hapus terpilih"}</button></div>
+      </div>
+      {visibleAccounts.length ? <div className="account-list">{visibleAccounts.map((account) => <article className="account-row" key={account.uuid}><div className="account-identity"><input className="account-select-checkbox" type="checkbox" checked={selectedAccountUuids.has(account.uuid)} disabled={account.is_current_user || deleteBusy} onChange={(event) => toggleAccountSelection(account.uuid, event.target.checked)} aria-label={account.is_current_user ? `Akun ${account.username} yang sedang digunakan tidak dapat dipilih` : `Pilih akun ${account.username}`} />{account.profile_photo ? <Image className="account-avatar" src={account.profile_photo} alt="" width={40} height={40} unoptimized /> : <span className="account-avatar account-avatar-empty"><UserRound size={17} /></span>}<div className="account-copy"><strong>{account.full_name || account.username}</strong><span>@{account.username} · {account.email}</span><small><CalendarDays size={13} />Terdaftar {new Date(account.created_at).toLocaleDateString("id-ID", { dateStyle: "medium" })}{account.last_active_at ? ` · Login ${new Date(account.last_active_at).toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" })}` : " · Belum pernah login"}</small></div></div><div className="account-tags"><span className={`account-role account-role-${account.role}`}>{account.role === "admin" ? "Admin" : "Student"}</span><span className={`account-state account-state-${account.account_status}`}>{account.account_status === "active" ? "Aktif" : "Dinonaktifkan"}</span></div><div className="admin-row-actions"><Link href={`/admin/akun/detail/${account.uuid}`} className="button button-secondary button-small" aria-label={`Detail akun ${account.username}`}><Eye size={14} />Detail</Link></div></article>)}</div> : <p className="empty-state">{accounts.length ? "Tidak ada akun yang cocok." : "Belum ada akun."}</p>}
     </section>
   </div>;
 }

@@ -36,9 +36,10 @@ export async function POST(request: Request) {
         const purpose = payload.purpose;
         const isMaterial = purpose === "material" && user.role === "admin";
         const isProfile = purpose === "profile" && user.role === "student";
+        const isNotificationImage = purpose === "admin-notification" && user.role === "admin";
         const targetUserId = Number(payload.targetUserId);
         const isAdminProfile = purpose === "admin-profile" && user.role === "admin" && Number.isSafeInteger(targetUserId) && targetUserId > 0;
-        if (!isMaterial && !isProfile && !isAdminProfile) throw new Error("Akses upload tidak diizinkan.");
+        if (!isMaterial && !isProfile && !isAdminProfile && !isNotificationImage) throw new Error("Akses upload tidak diizinkan.");
         if (isAdminProfile) {
           const target = await queryRows<(import("mysql2").RowDataPacket & { id: number })[]>(
             "SELECT id FROM users WHERE id = ? LIMIT 1",
@@ -46,15 +47,15 @@ export async function POST(request: Request) {
           );
           if (!target[0]) throw new Error("Akun tujuan tidak ditemukan.");
         }
-
         const profileUserId = isAdminProfile ? targetUserId : user.id;
-        const prefix = isMaterial ? `materials/${user.id}/` : `profiles/${profileUserId}/`;
+        const prefix = isMaterial ? `materials/${user.id}/` : isNotificationImage ? "notifications/" : `profiles/${profileUserId}/`;
         const filename = pathname.slice(prefix.length);
         if (!pathname.startsWith(prefix) || !filename || filename.includes("/") || filename.includes("..")) {
           throw new Error("Nama file upload tidak valid.");
         }
         const isMarkdown = isMaterial && filename.toLowerCase().endsWith(".md");
         if (isMaterial && !isMarkdown && !filename.toLowerCase().endsWith(".pdf")) throw new Error("File materi harus PDF atau Markdown .md.");
+        if (isNotificationImage && !/\.(?:jpe?g|png|webp)$/i.test(filename)) throw new Error("Gambar notifikasi harus JPG, PNG, atau WebP.");
 
         return {
           allowedContentTypes: isMaterial ? isMarkdown ? ["text/markdown"] : ["application/pdf"] : ["image/jpeg", "image/png", "image/webp"],

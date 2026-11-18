@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { AlignCenter, AlignLeft, AlignRight, Bold, Code2, Heading1, Heading2, Heading3, ImagePlus, Indent, Italic, Link2, List, ListOrdered, Minus, Outdent, Quote, Redo2, RemoveFormatting, Strikethrough, Subscript, Superscript, Table2, Underline, Undo2 } from "lucide-react";
 import { sanitizeRichHtml } from "@/components/courses/rich-html";
 
@@ -10,6 +10,7 @@ type MarkdownEditorProps = {
   value: string;
   onChange: (value: string) => void;
   contentFormat?: "html" | "markdown";
+  onUploadImage?: (file: File) => Promise<string>;
 };
 
 function MarkdownToolButton({ label, children, onClick, onMouseDown }: { label: string; children: ReactNode; onClick: () => void; onMouseDown?: () => void }) {
@@ -100,10 +101,14 @@ function markdownToHtml(markdown: string) {
   return blocks.join("");
 }
 
-export default function MarkdownEditor({ name, value, onChange, contentFormat = "html" }: MarkdownEditorProps) {
+export default function MarkdownEditor({ name, value, onChange, contentFormat = "html", onUploadImage }: MarkdownEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const onChangeRef = useRef(onChange);
   const lastEmittedValue = useRef<string | null>(null);
   const savedSelection = useRef<Range | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState("");
 
   function rememberSelection() {
     const editor = editorRef.current;
@@ -114,18 +119,24 @@ export default function MarkdownEditor({ name, value, onChange, contentFormat = 
   }
 
   useEffect(() => {
-    if (!editorRef.current || value === lastEmittedValue.current) {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    if (value === lastEmittedValue.current) {
       lastEmittedValue.current = null;
       return;
     }
     const initialHtml = contentFormat === "markdown" ? markdownToHtml(value) : value;
     const safeHtml = sanitizeRichHtml(initialHtml);
-    editorRef.current.innerHTML = safeHtml;
+    if (editor.innerHTML !== safeHtml) editor.innerHTML = safeHtml;
     if (contentFormat === "markdown") {
       lastEmittedValue.current = safeHtml;
-      onChange(safeHtml);
+      onChangeRef.current(safeHtml);
     }
-  }, [contentFormat, onChange, value]);
+  }, [contentFormat, value]);
 
   function runCommand(command: string, argument?: string) {
     const editor = editorRef.current;
@@ -165,6 +176,11 @@ export default function MarkdownEditor({ name, value, onChange, contentFormat = 
   }
 
   function insertImage() {
+    if (onUploadImage) {
+      setImageUploadError("");
+      imageInputRef.current?.click();
+      return;
+    }
     const url = window.prompt("Masukkan URL gambar (HTTPS):");
     if (!url) return;
     try {
@@ -173,6 +189,25 @@ export default function MarkdownEditor({ name, value, onChange, contentFormat = 
       runCommand("insertImage", parsed.toString());
     } catch {
       return;
+    }
+  }
+
+  async function handleImageUpload(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file || !onUploadImage) return;
+
+    setImageUploadError("");
+    setImageUploading(true);
+    try {
+      const url = new URL(await onUploadImage(file));
+      if (url.protocol !== "https:") throw new Error("URL gambar yang diunggah tidak aman.");
+      runCommand("insertImage", url.toString());
+    } catch (error) {
+      setImageUploadError(error instanceof Error ? error.message : "Gambar gagal diunggah.");
+    } finally {
+      setImageUploading(false);
+      input.value = "";
     }
   }
 
@@ -215,8 +250,11 @@ export default function MarkdownEditor({ name, value, onChange, contentFormat = 
         <MarkdownToolButton label="Hapus format" onClick={() => runCommand("removeFormat")} onMouseDown={rememberSelection}><RemoveFormatting size={16} /></MarkdownToolButton>
       </div>
       <input type="hidden" name={name} value={value} />
+      {onUploadImage && <input ref={imageInputRef} className="admin-markdown-image-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void handleImageUpload(event)} />}
       <div ref={editorRef} className="markdown-document admin-rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label="Isi materi" aria-multiline="true" data-placeholder="Tulis isi materi di sini..." onInput={handleInput} onKeyUp={rememberSelection} onMouseUp={rememberSelection} />
-      <p className="admin-markdown-hint">Format langsung terlihat saat mengetik. Pilih teks lalu gunakan toolbar. Maksimal 5 MB.</p>
+      {imageUploading && <p className="admin-markdown-hint" role="status">Sedang mengunggah gambar...</p>}
+      {imageUploadError && <p className="admin-markdown-hint status-error" role="alert">{imageUploadError}</p>}
+      <p className="admin-markdown-hint">Format langsung terlihat saat mengetik. Pilih teks lalu gunakan toolbar. {onUploadImage ? "Gambar: JPG, PNG, atau WebP, maksimal 2 MB." : "Maksimal 5 MB."}</p>
     </div>
   );
 }

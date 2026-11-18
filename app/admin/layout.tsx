@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, Brain, ChartNoAxesColumn, ChevronLeft, ChevronRight, ContactRound, GraduationCap, History, LayoutDashboard, ListChecks, LogOut, Menu, UsersRound, X } from "lucide-react";
+import { Bell, BookOpen, Brain, ChartNoAxesColumn, ChevronLeft, ChevronRight, ContactRound, GraduationCap, History, LayoutDashboard, ListChecks, LogOut, Menu, Terminal, UsersRound, X } from "lucide-react";
 import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { apiRequest } from "@/lib/browser-api";
 
@@ -16,7 +16,9 @@ const menu = [
   { href: "/admin/soal", label: "Quiz", icon: ListChecks },
   { href: "/admin/kontak", label: "Kontak", icon: ContactRound },
   { href: "/admin/akun", label: "Akun", icon: UsersRound },
+  { href: "/admin/notifikasi", label: "Notifikasi Email", icon: Bell },
   { href: "/admin/aktivitas", label: "Aktivitas", icon: History },
+  { href: "/admin/developer/console", label: "Terminal", icon: Terminal },
 ];
 const adminSidebarStorageKey = "courseup-admin-sidebar-collapsed";
 
