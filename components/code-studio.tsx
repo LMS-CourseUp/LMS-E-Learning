@@ -123,6 +123,25 @@ function filterExplorerTree(nodes: ExplorerNode[], query: string): ExplorerNode[
   return filtered;
 }
 
+function renderMobileCode(content: string, name: string) {
+  const extension = extensionOf(name);
+  return content.split("\n").map((line, lineIndex) => {
+    const tokens = line.split(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|<!--.*?-->|<\/?[A-Za-z][^>]*>|#[0-9A-Fa-f]{3,8}|\b(?:const|let|var|function|return|new|class|import|from|export|default|document|true|false|null|undefined)\b|\b\d+(?:\.\d+)?\b|\/\/.*$)/g);
+    return <span key={lineIndex}>{tokens.map((token, tokenIndex) => {
+      if (!token) return null;
+      let color = extension === "css" ? "#d4d4d4" : "#d4d4d4";
+      if (/^"|^'/.test(token)) color = "#ce9178";
+      else if (/^<!--|^<\/?[A-Za-z]/.test(token)) color = extension === "html" || extension === "htm" ? "#569cd6" : "#c586c0";
+      else if (/^#[0-9A-Fa-f]/.test(token)) color = "#b5cea8";
+      else if (/\b(?:const|let|var|function|return|new|class|import|from|export|default|document|true|false|null|undefined)\b/.test(token)) color = "#c586c0";
+      else if (/^\d/.test(token)) color = "#b5cea8";
+      else if (/^\/\//.test(token)) color = "#6a9955";
+      else if (extension === "css" && /^[A-Za-z-]+$/.test(token.trim())) color = "#9cdcfe";
+      return <span key={tokenIndex} style={{ color }}>{token}</span>;
+    })}{lineIndex < content.split("\n").length - 1 ? "\n" : ""}</span>;
+  });
+}
+
 function editorModeForName(name: string) {
   const extension = extensionOf(name);
   if (extension === "html" || extension === "htm") return "htmlmixed";
@@ -445,10 +464,6 @@ export default function CodeStudio() {
     aiMessagesEndRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
   }, [aiMessages, aiSending]);
 
-  useEffect(() => {
-    if (!ready || !window.matchMedia("(max-width: 800px)").matches) return;
-    if (files.some((file) => file.name === "script.js")) setActiveName("script.js");
-  }, [ready, files]);
 
   function addOutput(text: string, level: OutputLine["level"] = "info") {
     setOutput((current) => [...current.slice(-149), { id: nextLogId.current++, level, text }]);
@@ -824,7 +839,6 @@ export default function CodeStudio() {
           <div><button type="button" className="is-active" title="Explorer"><Folder size={20} /></button><button type="button" title="Search" onClick={() => setMobileSearchOpen(true)}><Search size={20} /></button><button type="button" title="Extensions"><Sparkles size={20} /></button><button type="button" title="Favorites"><CircleAlert size={20} /></button><button type="button" title="Source Control"><Terminal size={20} /></button></div>
           <button type="button" title="Akun pengguna"><CircleAlert size={20} /></button>
         </nav>
-        <div className="code-explorer-heading"><span>File dan folder</span><button type="button" className="code-explorer-close" aria-label="Tutup panel file" title="Tutup panel file" onClick={() => setActivePanel("editor")}><X size={16} /></button></div>
         <button type="button" className="code-explorer-project" onClick={() => setActiveFolder("")}><ChevronDown size={13} /><strong>PROJECT SAYA</strong></button>
         <div className="code-explorer-actions">
           <button type="button" aria-label="File baru" title="File baru" onClick={() => { setNewFileOpen((open) => !open); setNewFolderOpen(false); setNewFileError(""); }}><FilePlus2 size={15} /></button>
@@ -856,48 +870,13 @@ export default function CodeStudio() {
           <div className="code-editor-tabs">
             {files.slice(0, 4).map((file) => <button type="button" key={file.name} className={`code-open-file-tab ${activeName === file.name ? "is-active" : ""}`} onClick={() => selectFile(file.name)}>{fileTypeIcon(file.name)}<span>{file.name.split("/").at(-1)}</span><X size={11} /></button>)}
             <button type="button" className="code-mobile-problems" aria-label="Masalah"><CircleAlert size={12} /><span>Masalah</span></button>
-            {activeFile && <span className="code-editor-path">{activeFile.name.replace(/[^/]+$/, "")}</span>}
-            <div className="code-editor-tab-actions"><span className="code-mode-label"><Braces size={13} />{modeLabel}</span><button type="button" className="code-ai-icon" onClick={openAiPanel} title="Tanya AI tentang project" aria-label="Buka AI assistant"><Sparkles size={14} /></button></div>
           </div>
           <div className="code-editor-body">
-            <div className="code-mobile-reference-editor" aria-label="Mobile code preview">
-              <div className="code-mobile-line-gutter">
-                {Array.from({ length: 28 }, (_, index) => <span className={[3, 8, 13, 26].includes(index) ? "has-fold" : ""} key={index}>{index + 1}{[3, 8, 13, 26].includes(index) ? " v" : ""}</span>)}
-              </div>
-              <pre className="code-mobile-reference-code"><code>{`const $ = id => document.getElementById(id);
-
-const USERS = [
-  { username: "admin", password: "admin123", role: "admin", name: "Administrator" },
-  { username: "siswa", password: "siswa123", role: "siswa", name: "Siswa Demo" }
-];
-
-const today = () => {
-  const d = new Date();
-  return \u0024{d.getFullYear()}-\u0024{String(d.getMonth()+1).padStart(2,"0")}-\u0024{String(d.getDate()).padStart(2,"0")};
-};
-
-const addDays = (date, days) => {
-  const d = new Date(date + "T12:00:00");
-  d.setDate(d.getDate() + days);
-  return \u0024{d.getFullYear()}-\u0024{String(d.getMonth()+1).padStart(2,"0")}-\u0024{String(d.getDate()).padStart(2,"0")};
-};
-
-const dayDiff = (from, to) =>
-  Math.max(0, Math.floor(
-    (new Date(to + "T00:00:00") - new Date(
-      (from + "T00:00:00")) / 86400000
-  ));
-
-const money = n => new Intl.NumberFormat(
-  "id-ID").format(n);
-
-const esc = value => String(value ?? "");`}</code></pre>
-            </div>
-            <button type="button" className="code-mobile-editor-fab" aria-label="Gulir editor" title="Gulir editor" onClick={(event) => { const body = event.currentTarget.parentElement?.querySelector(".code-mobile-reference-editor") ?? event.currentTarget.parentElement; body?.scrollTo({ top: body.scrollHeight, behavior: "smooth" }); }}><ChevronDown size={20} /></button>
+            <button type="button" className="code-mobile-editor-fab" aria-label="Gulir editor" title="Gulir editor" onClick={(event) => { const body = event.currentTarget.parentElement?.querySelector(".CodeMirror-scroll") ?? event.currentTarget.parentElement; body?.scrollTo({ top: body.scrollHeight, behavior: "smooth" }); }}><ChevronDown size={20} /></button>
             <CodeMirrorEditor
               value={activeFile?.content ?? ""}
               mode={editorModeForName(activeFile?.name ?? "js")}
-              theme={editorDarkMode ? "material-darker" : "default"}
+              theme={editorDarkMode || (typeof window !== "undefined" && window.matchMedia("(max-width: 800px)").matches) ? "material-darker" : "default"}
               onChange={updateActiveContent}
               ariaLabel={`Editor ${activeFile?.name ?? "kode"}`}
             />

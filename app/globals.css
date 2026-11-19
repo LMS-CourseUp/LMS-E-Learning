@@ -2252,15 +2252,29 @@ body { color: var(--ink); background-color: var(--paper); }
   .code-route-shell .code-mobile-more-button { order: 4; }
 
   .code-route-shell .code-workbench { background: #1e1e1e; }
-  .code-route-shell .code-mobile-drawer-backdrop { display: block; }
+  .code-route-shell .code-mobile-drawer-backdrop {
+    position: absolute;
+    z-index: 140;
+    inset: 44px 0 0;
+    display: block;
+    width: 100%;
+    height: calc(100% - 44px);
+    border: 0;
+    background: rgb(0 0 0 / 50%);
+  }
   .code-route-shell .code-editor-tabs {
     min-height: 38px !important;
     height: 38px !important;
     align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
     overflow-x: auto;
+    overflow-y: hidden;
     border-bottom: 1px solid #2d2d2d;
     background: #181818;
+    scrollbar-width: none;
   }
+  .code-route-shell .code-editor-tabs::-webkit-scrollbar { display: none; }
   .code-route-shell .code-open-file-tab {
     min-width: 112px;
     max-width: 150px;
@@ -2281,7 +2295,28 @@ body { color: var(--ink); background-color: var(--paper); }
     background: #1e1e1e;
   }
   .code-route-shell .code-open-file-tab > svg:last-child { margin-left: auto; color: #777; }
-  .code-route-shell .code-mobile-problems { position: sticky; right: 0; display: flex; min-width: 72px; height: 38px; margin-left: auto; flex: 0 0 72px; align-items: center; justify-content: center; gap: 4px; border: 0; border-left: 1px solid #2d2d2d; color: #fff; background: #a31d1d; font-size: 9px; font-weight: 800; }
+  .code-route-shell .code-mobile-problems {
+    position: sticky;
+    z-index: 4;
+    right: 0;
+    display: flex;
+    min-width: 76px;
+    width: 76px;
+    height: 38px;
+    margin: 0 0 0 auto;
+    flex: 0 0 76px;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: 0;
+    border-left: 1px solid #7d2525;
+    border-radius: 0;
+    color: #fff;
+    background: #b20e0e;
+    box-shadow: -5px 0 8px #181818;
+    font-size: 9px;
+    font-weight: 800;
+  }
   .code-route-shell .code-editor-tab-actions { display: none; }
   .code-route-shell .code-editor-status { display: none; }
 
@@ -2289,11 +2324,14 @@ body { color: var(--ink); background-color: var(--paper); }
     background: #1e1e1e;
   }
   .code-route-shell .code-editor-body .CodeMirror {
+    position: relative;
+    z-index: 2;
+    display: block !important;
     background: #1e1e1e !important;
     color: #d4d4d4 !important;
     font: 13px/1.7 var(--font-body);
   }
-  .code-route-shell .code-editor-body .CodeMirror-scroll { background: #1e1e1e; }
+  .code-route-shell .code-editor-body .CodeMirror-scroll { height: 100%; background: #1e1e1e; }
   .code-route-shell .code-editor-body .CodeMirror-gutters { border-right: 1px solid #272727; background: #1e1e1e !important; }
   .code-route-shell .code-editor-body .CodeMirror-linenumber { color: #858585; }
   .code-route-shell .code-editor-body .CodeMirror-cursor { border-left-color: #d4d4d4; }
@@ -2304,6 +2342,9 @@ body { color: var(--ink); background-color: var(--paper); }
   .code-route-shell .code-editor-body .cm-number { color: #b5cea8; }
   .code-route-shell .code-editor-body .cm-comment { color: #6a9955; }
   .code-route-shell .code-editor-body .cm-def { color: #dcdcaa; }
+  .code-route-shell .code-editor-body .cm-tag { color: #569cd6; }
+  .code-route-shell .code-editor-body .cm-attribute { color: #9cdcfe; }
+  .code-route-shell .code-editor-body .cm-builtin { color: #4ec9b0; }
   .code-route-shell .code-mobile-editor-fab { display: grid; right: 14px; bottom: 14px; width: 40px; height: 40px; border: 1px solid #3e4451; background: #282c34; }
 
   .code-route-shell .code-mobile-shortcuts {
@@ -2325,37 +2366,62 @@ body { color: var(--ink); background-color: var(--paper); }
   .code-route-shell .code-terminal-panel { display: none; }
 
   .code-route-shell .code-explorer {
+    position: absolute;
+    z-index: 150;
+    inset: 0 auto 0 0;
     display: none;
     width: min(310px, calc(100vw - 48px));
-    border-right: 1px solid #2d2d2d;
-    background: #181818;
+    min-width: 0;
+    max-width: 310px;
+    overflow: hidden;
+    border: 0;
+    border-right: 0;
+    background: #25272a;
   }
   .code-route-shell .code-explorer.is-mobile-open {
     display: grid;
     grid-template-columns: 48px minmax(0, 1fr);
-    grid-template-rows: 38px auto auto auto auto minmax(0, 1fr) 27px;
+    grid-template-rows: auto auto auto minmax(0, 1fr) 27px;
   }
   .code-route-shell .code-mobile-activity-rail {
     grid-column: 1;
     grid-row: 1 / -1;
+    width: 48px;
+    min-width: 48px;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
     padding: 12px 0;
-    border-right: 1px solid #262626;
+    border: 0;
+    border-right: 0;
     background: #121212;
   }
   .code-route-shell .code-mobile-activity-rail > div { display: grid; gap: 20px; }
   .code-route-shell .code-mobile-activity-rail button { display: grid; width: 48px; height: 32px; place-items: center; border: 0; color: #7e7e7e; background: transparent; }
-  .code-route-shell .code-mobile-activity-rail button.is-active { border-left: 2px solid #fff; color: #fff; }
-  .code-route-shell .code-explorer-heading { grid-column: 2; grid-row: 1; min-height: 38px; border-bottom: 1px solid #2d2d2d; background: #181818; }
-  .code-route-shell .code-explorer-project { grid-column: 2; grid-row: 2; }
-  .code-route-shell .code-explorer-actions { grid-column: 2; grid-row: 3; }
-  .code-route-shell .code-explorer-search { grid-column: 2; grid-row: 4; }
-  .code-route-shell .code-explorer-form { grid-column: 2; grid-row: 5; }
-  .code-route-shell .code-explorer-tree { grid-column: 2; grid-row: 6; }
-  .code-route-shell .code-explorer-account { grid-column: 2; grid-row: 7; }
+  .code-route-shell .code-mobile-activity-rail button.is-active {
+    border: 0;
+    border-left: 0;
+    color: #ffffff;
+    background: transparent;
+  }
+  .code-route-shell .code-explorer-heading {
+    display: none;
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 44px;
+    height: 44px;
+    padding: 0 10px;
+    border-bottom: 1px solid #2d2d2d;
+    background: #181818;
+  }
+  .code-route-shell .code-explorer-project { grid-column: 2; grid-row: 1; width: 100%; min-width: 0; min-height: 44px; }
+  .code-route-shell .code-explorer-actions { grid-column: 2; grid-row: 2; width: 100%; min-width: 0; }
+  .code-route-shell .code-explorer-search { grid-column: 2; grid-row: 3; width: auto; min-width: 0; }
+  .code-route-shell .code-explorer-form { grid-column: 2; grid-row: 4; min-width: 0; }
+  .code-route-shell .code-explorer-tree { grid-column: 2; grid-row: 4; min-width: 0; overflow-x: hidden; overflow-y: auto; }
+  .code-route-shell .code-explorer-account { grid-column: 2; grid-row: 5; width: 100%; min-width: 0; }
 
   .code-route-shell .code-mobile-menu {
     position: absolute;
@@ -3089,13 +3155,6 @@ body { color: var(--ink); background-color: var(--paper); }
   .code-route-shell .code-explorer-row { height: 40px; }
   .code-route-shell .code-folder-row,
   .code-route-shell .code-file-row > button { font-size: 13px; }
-  .code-route-shell .code-workbench:has(.code-explorer.is-mobile-open)::before {
-    position: absolute;
-    z-index: 14;
-    inset: 0;
-    content: "";
-    background: rgba(5, 12, 14, .48);
-  }
   .code-route-shell .code-explorer.is-mobile-open { z-index: 15; }
   .code-route-shell .code-editor-tabs,
   .code-route-shell .code-preview-toolbar,
@@ -4270,9 +4329,7 @@ body, :root[data-theme="dark"] body {
   .code-route-shell .code-topbar { min-height: 44px !important; height: 44px !important; }
   .code-route-shell .code-editor-tabs { min-height: 38px !important; height: 38px !important; }
   .code-route-shell .code-editor-body { overflow: hidden; }
-  .code-route-shell .code-editor-body > textarea,
-  .code-route-shell .code-editor-body > .CodeMirror,
-  .code-route-shell .code-editor-body > .code-editor-loading { display: none !important; }
+  .code-route-shell .code-editor-body > textarea { display: none; }
   .code-route-shell .code-mobile-reference-editor {
     position: absolute;
     z-index: 2;
@@ -4357,4 +4414,224 @@ body, :root[data-theme="dark"] body {
   .code-route-shell .code-mobile-shortcuts { display: flex !important; min-height: 38px; height: 38px; }
   .code-route-shell .code-mobile-direction-keys { display: flex !important; min-height: 34px; height: 34px; }
   .code-route-shell .code-mobile-home-indicator { display: flex !important; min-height: 16px; height: 16px; }
+  .code-route-shell .code-explorer.is-mobile-open,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-heading,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    color: #d1d5db;
+    background: #181818;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail {
+    color: #9d9d9d;
+    background: #121212;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row {
+    min-height: 40px;
+    height: 40px;
+    padding-right: 8px;
+    max-width: 100%;
+    overflow: hidden;
+    color: #c9c9c9;
+  }
+  .code-route-shell .code-explorer.is-mobile-open,
+  .code-route-shell .code-explorer.is-mobile-open * {
+    border-radius: 0;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-heading,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row {
+    border-color: #2d2d2d !important;
+    color: #c9c9c9 !important;
+    background: #181818 !important;
+    box-shadow: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child span,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row span,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project strong,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-heading,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-heading span {
+    color: #e5e7eb !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-close,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:last-child {
+    display: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:active,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:focus-visible {
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button svg {
+    color: #9b9b9b;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button.is-active svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:hover svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:active svg {
+    color: #ffffff;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row.is-selected,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row.is-selected {
+    border-left: 2px solid #007acc;
+    background: #252526 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-heading > span,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project strong,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child span,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row span,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    color: #e5e7eb !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open {
+    background: #202124 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    background: #202124 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project strong,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child span,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row span,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    color: #f1f3f4 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form {
+    border-color: #45484d !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search input,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form input {
+    color: #f5f7f8 !important;
+    background: #303236 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open {
+    background: #25272a !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    background: #25272a !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project strong,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child span,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row span,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search input::placeholder {
+    color: #f5f7f8 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search {
+    border-color: #4a4d52 !important;
+    background: #303236 !important;
+  }
+  .code-route-shell .code-mobile-drawer-backdrop {
+    z-index: 100 !important;
+    left: 310px !important;
+    width: calc(100% - 310px) !important;
+    background: transparent !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+  }
+  .code-route-shell .code-workbench,
+  .code-route-shell .code-workbench:has(.code-explorer.is-mobile-open),
+  .code-route-shell .code-main-panes {
+    position: relative;
+    z-index: 40 !important;
+    background: #1e1e1e !important;
+  }
+  .code-route-shell .code-editor-column,
+  .code-route-shell .code-editor-body {
+    background: #1e1e1e !important;
+  }
+  .code-route-shell .code-workbench:has(.code-explorer.is-mobile-open) .code-editor-column {
+    position: absolute;
+    z-index: 40;
+    inset: 0;
+    display: flex;
+  }
+  .code-route-shell .code-workbench:has(.code-explorer.is-mobile-open) .code-editor-column::after {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    content: "";
+    background: #1e1e1e;
+  }
+  .code-route-shell .code-explorer.is-mobile-open,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row {
+    border: 0 !important;
+    border-right: 0 !important;
+    border-left: 0 !important;
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+  }
+  .code-route-shell .code-mobile-reference-editor,
+  .code-route-shell .code-mobile-reference-code,
+  .code-route-shell .code-mobile-line-gutter {
+    opacity: 1 !important;
+    filter: none !important;
+  }
+  .code-route-shell .code-mobile-reference-code {
+    color: #d4d4d4 !important;
+  }
+  .code-route-shell .code-mobile-line-gutter {
+    color: #858585 !important;
+    background: #1e1e1e !important;
+  }
+  .code-route-shell .code-editor-tabs .code-open-file-tab,
+  .code-route-shell .code-editor-tabs .code-mobile-problems {
+    align-self: stretch;
+  }
+  .code-route-shell .code-editor-tabs .code-open-file-tab:not(.is-active) {
+    border-top: 0;
+  }
+  .code-route-shell .code-editor-tabs .code-open-file-tab.is-active {
+    min-width: 112px;
+    border-top: 2px solid #007acc;
+  }
 }
