@@ -288,6 +288,8 @@ export default function CodeStudio() {
   const [newFileOpen, setNewFileOpen] = useState(false);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFileName, setNewFileName] = useState("");
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [renameName, setRenameName] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [newFileError, setNewFileError] = useState("");
   const [explorerSearch, setExplorerSearch] = useState("");
@@ -315,6 +317,10 @@ export default function CodeStudio() {
 
   const activeFile = files.find((file) => file.name === activeName) ?? files[0];
   const activeExtension = activeFile ? extensionOf(activeFile.name) : "";
+  const searchQuery = explorerSearch.trim().toLowerCase();
+  const searchMatches = useMemo(() => searchQuery
+    ? files.filter((file) => file.name.toLowerCase().includes(searchQuery) || file.content.toLowerCase().includes(searchQuery))
+    : [], [files, searchQuery]);
   const nativeMode = ["tsx", "jsx"].includes(activeExtension);
   const phpMode = activeExtension === "php";
   const explorerTree = useMemo(() => buildExplorerTree(files, folders), [files, folders]);
@@ -510,6 +516,37 @@ export default function CodeStudio() {
     setNewFileName("");
     setNewFileError("");
     setNewFileOpen(false);
+  }
+
+  function openRenameDialog() {
+    setRenameName(activeFile?.name ?? "");
+    setNewFileError("");
+    setRenameDialogOpen(true);
+  }
+
+  function renameActiveFile(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    const nextName = renameName.trim();
+    if (!activeFile || !isValidWorkspacePath(nextName) || !allowedExtensions.has(extensionOf(nextName))) {
+      setNewFileError("Nama file atau formatnya tidak valid.");
+      return;
+    }
+    if (nextName !== activeFile.name && files.some((file) => file.name.toLowerCase() === nextName.toLowerCase())) {
+      setNewFileError("File dengan nama tersebut sudah ada.");
+      return;
+    }
+    setFiles((current) => current.map((file) => file.name === activeFile.name ? { ...file, name: nextName } : file));
+    setActiveName(nextName);
+    setFolders((current) => current.map((folder) => {
+      if (folder === activeFile.name) return nextName;
+      if (activeFile.name.includes("/") && folder === activeFile.name.slice(0, activeFile.name.lastIndexOf("/"))) {
+        return nextName.includes("/") ? nextName.slice(0, nextName.lastIndexOf("/")) : "";
+      }
+      return folder;
+    }).filter(Boolean));
+    setIsDirty(true);
+    setRenameDialogOpen(false);
+    setNewFileError("");
   }
 
   function createFolder(event?: FormEvent<HTMLFormElement>) {
@@ -797,10 +834,10 @@ export default function CodeStudio() {
 
   return <section className="code-studio" aria-label="Code editor workspace">
     <header className="code-topbar">
-      <button type="button" className="code-mobile-menu-button" aria-label="Buka file" title="Buka file" onClick={() => { setActivePanel("explorer"); setMobileMenuOpen(false); }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button>
+      <button type="button" className="code-mobile-menu-button" aria-label={activePanel === "explorer" ? "Tutup file" : "Buka file"} title={activePanel === "explorer" ? "Tutup file" : "Buka file"} onClick={() => { setActivePanel((panel) => panel === "explorer" ? "editor" : "explorer"); setMobileMenuOpen(false); }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button>
       <button type="button" className="code-exit-button" aria-label="Kembali ke beranda" title="Kembali ke beranda" onClick={() => leaveEditor()}><ArrowLeft size={16} /><span>Kembali</span></button>
       <div className="code-mobile-current-name"><strong>{activeFile?.name ?? "Pilih file"}</strong><span>.../project/{activeFile?.name ?? "file"}</span></div>
-      <button type="button" className="code-mobile-edit-name" aria-label="Edit nama file" title="Edit nama file"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+      <button type="button" className="code-mobile-edit-name" aria-label="Edit nama file" title="Edit nama file" onClick={openRenameDialog}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
       <button type="button" className="code-mobile-header-search" aria-label="Cari dalam berkas" title="Cari dalam berkas" onClick={() => setMobileSearchOpen(true)}><Search size={16} /></button>
       <button type="button" className="code-mobile-more-button" aria-label="Menu berkas" title="Menu berkas" onClick={() => setMobileMenuOpen((open) => !open)}><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" /></svg></button>
       <div className="code-brand"><span className="code-brand-mark"><Code2 size={16} /></span><strong>Editor <span>Kode</span></strong><span className="code-project-name">Project Saya</span></div>
@@ -830,7 +867,10 @@ export default function CodeStudio() {
     {mobileSearchOpen && <div className="code-mobile-search" role="search">
       <div><strong>Cari dalam berkas</strong><button type="button" aria-label="Tutup pencarian" onClick={() => setMobileSearchOpen(false)}><X size={15} /></button></div>
       <label><Search size={14} /><input value={explorerSearch} onChange={(event) => setExplorerSearch(event.target.value)} placeholder="Cari..." autoFocus /></label>
-      <span>{filteredExplorerTree.length ? `${filteredExplorerTree.length} berkas cocok` : "0 hasil dalam 0 berkas"}</span>
+      <span>{searchQuery ? `${searchMatches.length} hasil dalam ${searchMatches.length} berkas` : "0 hasil dalam 0 berkas"}</span>
+      {searchQuery && searchMatches.length > 0 && <div className="code-mobile-search-results">
+        {searchMatches.map((file) => <button type="button" key={file.name} onClick={() => { selectFile(file.name); setMobileSearchOpen(false); }}><FileCode2 size={13} /><span>{file.name}</span></button>)}
+      </div>}
     </div>}
 
     <div className="code-workbench">
@@ -948,6 +988,8 @@ export default function CodeStudio() {
     </div>
 
     <footer className="code-statusbar"><span><span className={`code-live-indicator ${isDirty ? "is-dirty" : ""}`} />{isDirty ? "Perubahan belum disimpan" : syncMessage}</span><span>{activeFile?.name ?? ""}</span><span>{(files.reduce((total, file) => total + new TextEncoder().encode(file.content).byteLength, 0) / 1024).toFixed(1)} KB / 20 MB</span></footer>
+
+    {renameDialogOpen && <div className="code-dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setRenameDialogOpen(false); }}><form className="code-dialog" role="dialog" aria-modal="true" aria-labelledby="code-rename-title" onSubmit={renameActiveFile}><button type="button" className="code-dialog-close" aria-label="Tutup" onClick={() => setRenameDialogOpen(false)}><X size={16} /></button><span className="code-dialog-icon"><FileText size={19} /></span><h2 id="code-rename-title">Ubah nama file</h2><p>Masukkan nama lengkap file, termasuk folder jika perlu.</p><label className="code-dialog-file-name"><span>Nama file</span><input value={renameName} onChange={(event) => { setRenameName(event.target.value); setNewFileError(""); }} autoFocus onKeyDown={(event) => { if (event.key === "Escape") setRenameDialogOpen(false); }} /></label>{newFileError && <small className="code-dialog-error" role="alert">{newFileError}</small>}<div><button type="button" className="code-dialog-secondary" onClick={() => setRenameDialogOpen(false)}>Batal</button><button type="submit" className="code-dialog-primary">Simpan nama</button></div></form></div>}
 
     {exitDialogOpen && <div className="code-dialog-backdrop" role="presentation"><section className="code-dialog" role="dialog" aria-modal="true" aria-labelledby="code-exit-title"><span className="code-dialog-icon"><CircleAlert size={19} /></span><h2 id="code-exit-title">Perubahan belum tersimpan</h2><p>Keluar sekarang tanpa menyimpan perubahan terakhir?</p><div><button type="button" className="code-dialog-secondary" onClick={() => setExitDialogOpen(false)}>Kembali ke editor</button><button type="button" className="code-dialog-danger" onClick={() => leaveEditor(true)}>Keluar tanpa simpan</button><button type="button" className="code-dialog-primary" onClick={async () => { if (await saveWorkspace()) leaveEditor(true); }}>Simpan & keluar</button></div></section></div>}
 
