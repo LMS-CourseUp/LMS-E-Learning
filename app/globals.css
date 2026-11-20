@@ -2394,7 +2394,7 @@ body { color: var(--ink); background-color: var(--paper); }
     z-index: 180;
     inset: 0 auto 0 0;
     display: none;
-    width: min(310px, calc(100vw - 48px));
+    width: min(310px, 76vw, calc(100vw - 48px));
     min-width: 0;
     max-width: 310px;
     overflow: hidden;
@@ -3210,7 +3210,7 @@ body { color: var(--ink); background-color: var(--paper); }
   .code-route-shell .code-explorer-row { height: 40px; }
   .code-route-shell .code-folder-row,
   .code-route-shell .code-file-row > button { font-size: 13px; }
-  .code-route-shell .code-explorer.is-mobile-open { z-index: 15; }
+  .code-route-shell .code-explorer.is-mobile-open { z-index: 190; }
   .code-route-shell .code-editor-tabs,
   .code-route-shell .code-preview-toolbar,
   .code-route-shell .code-right-tabs { min-height: 44px; }
@@ -4617,12 +4617,13 @@ body, :root[data-theme="dark"] body {
     background: #303236 !important;
   }
   .code-route-shell .code-mobile-drawer-backdrop {
-    z-index: 100 !important;
-    left: 310px !important;
-    width: calc(100% - 310px) !important;
-    background: transparent !important;
+    z-index: 170 !important;
+    right: 0 !important;
+    left: min(310px, 76vw) !important;
+    width: calc(100% - min(310px, 76vw)) !important;
+    background: rgb(0 0 0 / 22%) !important;
     opacity: 1 !important;
-    pointer-events: none !important;
+    pointer-events: auto !important;
   }
   .code-route-shell .code-workbench,
   .code-route-shell .code-workbench:has(.code-explorer.is-mobile-open),
@@ -4688,5 +4689,41 @@ body, :root[data-theme="dark"] body {
   .code-route-shell .code-editor-tabs .code-open-file-tab.is-active {
     min-width: 112px;
     border-top: 2px solid #007acc;
+  }
+}
+
+@media (max-width: 800px) {
+  .code-route-shell .code-explorer.is-mobile-open {
+    z-index: 190 !important;
+    width: min(310px, 76vw, calc(100vw - 48px)) !important;
+    max-width: 310px !important;
+    min-width: 0 !important;
+    box-shadow: 12px 0 28px rgb(0 0 0 / 32%) !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail {
+    z-index: 191 !important;
+    width: 48px !important;
+    min-width: 48px !important;
+    background: #121212 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    background: #25272a !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project strong,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child span,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row span,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    color: #f1f3f4 !important;
+  }
+  .code-route-shell .code-mobile-drawer-backdrop {
+    z-index: 170 !important;
   }
 }
