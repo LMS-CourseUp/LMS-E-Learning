@@ -4543,8 +4543,10 @@ body, :root[data-theme="dark"] body {
   }
   .code-route-shell .code-explorer.is-mobile-open .code-file-row.is-selected,
   .code-route-shell .code-explorer.is-mobile-open .code-folder-row.is-selected {
-    border-left: 2px solid #007acc;
-    background: #252526 !important;
+    border: 0 !important;
+    border-left: 0 !important;
+    outline: none !important;
+    background: #25272a !important;
   }
   .code-route-shell .code-explorer.is-mobile-open .code-explorer-heading > span,
   .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
@@ -4693,6 +4695,31 @@ body, :root[data-theme="dark"] body {
 }
 
 @media (max-width: 800px) {
+  .code-route-shell .code-explorer.is-mobile-open [title],
+  .code-route-shell .code-explorer.is-mobile-open [title]:hover {
+    text-decoration: none;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row:focus-within,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row:focus-within {
+    color: #f1f3f4 !important;
+    background: #25272a !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row::after,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row::before {
+    content: none !important;
+  }
   .code-route-shell .code-explorer.is-mobile-open {
     z-index: 190 !important;
     width: min(310px, 76vw, calc(100vw - 48px)) !important;
@@ -4722,6 +4749,80 @@ body, :root[data-theme="dark"] body {
   .code-route-shell .code-explorer.is-mobile-open .code-folder-row span,
   .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
     color: #f1f3f4 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree::-webkit-scrollbar,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open button,
+  .code-route-shell .code-explorer.is-mobile-open button:active,
+  .code-route-shell .code-explorer.is-mobile-open button:focus,
+  .code-route-shell .code-explorer.is-mobile-open button:focus-visible,
+  .code-route-shell .code-explorer.is-mobile-open button:focus-within {
+    border: 0 !important;
+    outline: 0 !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row::before,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row::after,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row::before,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row::after,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button::before,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button::after,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row > *::before,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row > *::after {
+    content: none !important;
+    display: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row:focus-within,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row:focus-within {
+    border: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    outline: none !important;
+    background: #252526 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button:active,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button:focus-visible {
+    color: #ffffff !important;
+    background: transparent !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button svg *,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button:hover svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button:hover svg * {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+    fill: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button.is-active,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button.is-active svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:hover svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:active svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:focus-visible svg {
+    color: #ffffff !important;
+    fill: none;
   }
   .code-route-shell .code-mobile-drawer-backdrop {
     z-index: 170 !important;

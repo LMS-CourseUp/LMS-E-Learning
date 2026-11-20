@@ -727,7 +727,7 @@ export default function CodeStudio() {
       }
       return <div key={node.path} className={`code-explorer-row code-file-row ${activeName === node.path ? "is-selected" : ""}`} style={{ paddingLeft: 27 + depth * 14 }}>
         <button type="button" onClick={() => selectFile(node.path)}>{fileTypeIcon(node.name)}<span>{node.name.split("/").at(-1)}</span></button>
-        <button type="button" aria-label={`Hapus ${node.path}`} title="Hapus file" onClick={() => removeFile(node.path)}><X size={12} /></button>
+        <button type="button" aria-label={`Hapus ${node.path}`} onClick={() => removeFile(node.path)}><X size={12} /></button>
       </div>;
     });
   }
@@ -876,14 +876,14 @@ export default function CodeStudio() {
     <div className="code-workbench">
       <aside id="code-explorer-panel" className={`code-explorer ${activePanel === "explorer" ? "is-mobile-open" : ""}`} aria-label="Explorer project">
         <nav className="code-mobile-activity-rail" aria-label="Activity bar">
-          <div><button type="button" className="is-active" title="Explorer"><Folder size={20} /></button><button type="button" title="Search" onClick={() => setMobileSearchOpen(true)}><Search size={20} /></button><button type="button" title="Extensions"><Sparkles size={20} /></button><button type="button" title="Favorites"><CircleAlert size={20} /></button><button type="button" title="Source Control"><Terminal size={20} /></button></div>
-          <button type="button" title="Akun pengguna"><CircleAlert size={20} /></button>
+          <div><button type="button" className="is-active" aria-label="Explorer"><Folder size={20} /></button><button type="button" aria-label="Search" onClick={() => setMobileSearchOpen(true)}><Search size={20} /></button><button type="button" aria-label="Extensions"><Sparkles size={20} /></button><button type="button" aria-label="Favorites"><CircleAlert size={20} /></button><button type="button" aria-label="Source Control"><Terminal size={20} /></button></div>
+          <button type="button" aria-label="Akun pengguna"><CircleAlert size={20} /></button>
         </nav>
         <button type="button" className="code-explorer-project" onClick={() => setActiveFolder("")}><ChevronDown size={13} /><strong>PROJECT SAYA</strong></button>
         <div className="code-explorer-actions">
-          <button type="button" aria-label="File baru" title="File baru" onClick={() => { setNewFileOpen((open) => !open); setNewFolderOpen(false); setNewFileError(""); }}><FilePlus2 size={15} /></button>
-          <button type="button" aria-label="Folder baru" title="Folder baru" onClick={toggleFolderDialog}><FolderPlus size={15} /></button>
-          <button type="button" aria-label="Simpan semua" title="Simpan semua" onClick={() => void saveWorkspace()}><Save size={14} /></button>
+          <button type="button" aria-label="File baru" onClick={() => { setNewFileOpen((open) => !open); setNewFolderOpen(false); setNewFileError(""); }}><FilePlus2 size={15} /></button>
+          <button type="button" aria-label="Folder baru" onClick={toggleFolderDialog}><FolderPlus size={15} /></button>
+          <button type="button" aria-label="Simpan semua" onClick={() => void saveWorkspace()}><Save size={14} /></button>
         </div>
         <label className="code-explorer-search"><Search size={13} /><input value={explorerSearch} placeholder="Cari file atau folder" onChange={(event) => setExplorerSearch(event.target.value)} /><kbd>⌘ P</kbd></label>
         {newFileOpen && <form className="code-explorer-form" onSubmit={createFile}>
