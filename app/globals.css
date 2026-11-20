@@ -887,7 +887,7 @@ body, :root[data-theme="dark"] body {
 :root[data-theme="dark"] .quiz-progress-track { border-color: var(--glass-stroke); background: #0d1b20; }
 :root[data-theme="dark"] .quiz-jump { border-color: var(--glass-stroke); color: var(--ink); }
 
-.code-route-shell { position: fixed; inset: 0; z-index: 80; width: 100vw; height: 100dvh; overflow: hidden; background: #11191d; }
+.code-route-shell { position: fixed; inset: 0; z-index: 80; width: 100vw; height: 100dvh; overflow: hidden; background: var(--code-editor-background); }
 body:has(.code-route-shell) { min-height: 100dvh; overflow: hidden; }
 .code-studio { width: 100%; height: 100%; min-height: 0; margin: 0; transform: none; border: 0; border-radius: 0; box-shadow: none; }
 .code-topbar { min-height: 48px; padding: 0 12px; }
@@ -2251,7 +2251,28 @@ body { color: var(--ink); background-color: var(--paper); }
   .code-route-shell .code-mobile-header-search { order: 3; }
   .code-route-shell .code-mobile-more-button { order: 4; }
 
-  .code-route-shell .code-workbench { background: #1e1e1e; }
+  .code-route-shell .code-workbench {
+    width: 100%;
+    height: calc(100dvh - 44px);
+    min-height: 0;
+    background: #1e1e1e;
+  }
+  .code-route-shell .code-main-panes {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+  .code-route-shell .code-editor-column {
+    width: 100%;
+    height: 100%;
+  }
+  .code-route-shell .code-editor-body {
+    height: auto;
+    min-height: 0;
+    flex: 1;
+  }
   .code-route-shell .code-mobile-drawer-backdrop {
     position: absolute;
     z-index: 140;
@@ -2321,6 +2342,9 @@ body { color: var(--ink); background-color: var(--paper); }
   .code-route-shell .code-editor-status { display: none; }
 
   .code-route-shell .code-editor-body {
+    height: auto;
+    min-height: 0;
+    flex: 1;
     background: #1e1e1e;
   }
   .code-route-shell .code-editor-body .CodeMirror {

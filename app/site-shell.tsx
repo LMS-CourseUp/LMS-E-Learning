@@ -36,7 +36,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.dataset.theme = "light";
-  }, []);
+  }, [pathname]);
 
   async function logout() {
     await apiRequest("/api/v1/auth/logout", { method: "POST" });
