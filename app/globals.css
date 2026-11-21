@@ -887,7 +887,7 @@ body, :root[data-theme="dark"] body {
 :root[data-theme="dark"] .quiz-progress-track { border-color: var(--glass-stroke); background: #0d1b20; }
 :root[data-theme="dark"] .quiz-jump { border-color: var(--glass-stroke); color: var(--ink); }
 
-.code-route-shell { position: fixed; inset: 0; z-index: 80; width: 100vw; height: 100dvh; overflow: hidden; background: #11191d; }
+.code-route-shell { position: fixed; inset: 0; z-index: 80; width: 100vw; height: 100dvh; overflow: hidden; background: var(--code-editor-background); }
 body:has(.code-route-shell) { min-height: 100dvh; overflow: hidden; }
 .code-studio { width: 100%; height: 100%; min-height: 0; margin: 0; transform: none; border: 0; border-radius: 0; box-shadow: none; }
 .code-topbar { min-height: 48px; padding: 0 12px; }
@@ -1049,30 +1049,54 @@ body:has(.code-route-shell) { min-height: 100dvh; overflow: hidden; }
 
 @media (max-width: 800px) {
   .code-route-shell { z-index: 100; }
-  .code-topbar { min-height: 46px; padding: 0 8px; gap: 7px; }
-  .code-exit-button { width: 30px; min-width: 30px; padding: 0; justify-content: center; }
-  .code-exit-button span, .code-brand strong, .code-project-name, .code-save-button span, .code-sync-state { display: none; }
-  .code-brand { gap: 0; }
-  .code-brand-mark { width: 27px; height: 27px; }
-  .code-top-actions { gap: 5px; }
-  .code-save-button, .code-ai-button { width: 31px; min-width: 31px; padding: 0; justify-content: center; }
-  .code-ai-button span { display: none; }
-  .code-run-button { min-height: 30px; padding: 0 8px; gap: 5px; }
-  .code-run-button kbd { display: none; }
-  .code-mobile-switch { display: grid; min-height: 39px; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid #29383b; background: #172327; }
-  .code-mobile-switch button { display: flex; align-items: center; justify-content: center; gap: 6px; border: 0; color: #8da09c; background: transparent; font-size: 10px; }
-  .code-mobile-switch button.is-active { border-bottom: 2px solid #7cdda7; color: #e0eee6; }
+  .code-studio { background: #1e1e1e; }
+  .code-topbar { min-height: 44px; padding: 0 7px; gap: 7px; border-bottom-color: #2d2d2d; background: #1e1e1e; }
+  .code-exit-button { display: none; }
+  .code-mobile-menu-button, .code-mobile-more-button { display: grid; width: 32px; height: 32px; flex: 0 0 32px; place-items: center; border: 0; border-radius: 4px; color: #d3d3d3; background: transparent; }
+  .code-mobile-menu-button:hover, .code-mobile-more-button:hover { background: #2e2e2e; }
+  .code-mobile-current-name { min-width: 0; flex: 1; overflow: hidden; color: #f1f1f1; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+  .code-brand, .code-save-button, .code-ai-button, .code-sync-state, .code-run-button kbd { display: none; }
+  .code-top-actions { flex: 0 0 auto; gap: 4px; }
+  .code-run-button { width: 32px; min-width: 32px; height: 32px; min-height: 32px; padding: 0; justify-content: center; border: 0; border-radius: 4px; color: #d3d3d3; background: transparent; }
+  .code-run-button span { display: none; }
   .code-workbench { display: block; min-height: 0; }
-  .code-explorer { position: absolute; z-index: 15; inset: 0 auto 0 0; display: none; width: min(290px, calc(100vw - 48px)); box-shadow: 14px 0 30px #0005; }
+  .code-mobile-drawer-backdrop { position: absolute; z-index: 14; inset: 0; width: 100%; height: 100%; border: 0; background: rgb(0 0 0 / 50%); }
+  .code-explorer { position: absolute; z-index: 15; inset: 0 auto 0 0; display: none; width: min(310px, calc(100vw - 48px)); border-right: 1px solid #2d2d2d; box-shadow: 14px 0 30px #0005; background: #181818; }
   .code-explorer.is-mobile-open { display: flex; }
   .code-main-panes { position: absolute; inset: 0; display: block; }
   .code-editor-column, .code-preview-pane { position: absolute; inset: 0; display: none; border-left: 0; }
   .code-editor-column.is-mobile-active, .code-preview-pane.is-mobile-active { display: flex; }
-  .code-editor-tabs { min-height: 34px; }
-  .code-mode-label { max-width: 116px; overflow: hidden; font-size: 8px; }
+  .code-mobile-switch { display: none; }
+  .code-editor-tabs { min-height: 38px; overflow-x: auto; border-bottom-color: #2d2d2d; background: #181818; }
+  .code-open-file-tab { min-width: 112px; max-width: 150px; height: 38px; padding: 0 11px; border-right: 1px solid #2d2d2d; border-top: 0; color: #9c9c9c; background: #181818; }
+  .code-open-file-tab.is-active { border-top: 2px solid #007acc; color: #fff; background: #1e1e1e; }
+  .code-editor-tab-actions { margin-left: auto; padding-right: 4px; }
+  .code-mode-label { display: none; }
   .code-editor-path { display: none; }
-  .code-editor-status { gap: 8px; }
-  .code-terminal-panel { max-height: 50%; }
+  .code-editor-status { min-height: 24px; gap: 8px; border-top: 1px solid #292929; background: #181818; }
+  .code-editor-status span:first-child { display: none; }
+  .code-editor-status span:nth-last-child(n+3) { display: none; }
+  .code-editor-body { background: #1e1e1e; }
+  .code-editor-body .CodeMirror { height: 100%; font-size: 13px; }
+  .code-editor-body .CodeMirror-gutters { border-right-color: #272727; background: #1e1e1e; }
+  .code-editor-body .CodeMirror-linenumber { color: #858585; }
+  .code-mobile-editor-fab { position: absolute; z-index: 8; right: 14px; bottom: 14px; display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid #3e4451; border-radius: 50%; color: #d1d5db; background: #282c34; box-shadow: 0 8px 20px #0007; }
+  .code-mobile-shortcuts { display: flex; min-height: 38px; padding: 5px 8px; align-items: center; justify-content: space-between; gap: 6px; border-top: 1px solid #292929; background: #181818; }
+  .code-mobile-shortcuts > div { display: flex; align-items: center; gap: 6px; }
+  .code-mobile-shortcuts button { display: grid; min-width: 31px; height: 28px; padding: 0 7px; place-items: center; border: 0; border-radius: 4px; color: #d1d1d1; background: #252526; font-size: 11px; font-weight: 700; }
+  .code-mobile-shortcuts button:active { background: #007acc; }
+  .code-mobile-direction-keys { display: flex; min-height: 34px; padding: 2px 12px; align-items: center; justify-content: space-between; border-top: 1px solid #202020; color: #9a9a9a; background: #121212; }
+  .code-mobile-direction-keys button { display: grid; width: 30px; height: 28px; place-items: center; border: 0; color: #9a9a9a; background: transparent; }
+  .code-terminal-resize, .code-terminal-panel { display: none; }
+  .code-mobile-menu { position: absolute; z-index: 120; top: 40px; right: 7px; display: grid; width: min(256px, calc(100vw - 24px)); padding: 5px 0; border: 1px solid #3e3e42; border-radius: 4px; background: #252526; box-shadow: 0 12px 30px #0009; }
+  .code-mobile-menu button { display: flex; min-height: 38px; padding: 0 14px; align-items: center; gap: 10px; border: 0; color: #ededed; background: transparent; text-align: left; font-size: 12px; }
+  .code-mobile-menu button:hover { background: #37373d; }
+  .code-mobile-search { position: absolute; z-index: 110; top: 44px; right: 0; left: 0; display: grid; padding: 10px 12px; gap: 8px; border-bottom: 1px solid #333; background: #212121; box-shadow: 0 12px 24px #0007; }
+  .code-mobile-search > div { display: flex; align-items: center; justify-content: space-between; color: #ededed; font-size: 12px; }
+  .code-mobile-search > div button { display: grid; width: 28px; height: 28px; place-items: center; border: 0; color: #aaa; background: transparent; }
+  .code-mobile-search label { display: flex; height: 34px; padding: 0 9px; align-items: center; gap: 7px; border: 1px solid #3e3e42; border-radius: 3px; color: #777; background: #181818; }
+  .code-mobile-search input { width: 100%; border: 0; outline: 0; color: #fff; background: transparent; font-size: 12px; }
+  .code-mobile-search > span { color: #999; font-size: 10px; }
   .code-terminal-command { min-height: 32px; flex-basis: 32px; }
   .code-terminal-resize { height: 7px; flex-basis: 7px; }
   .code-preview-stage { min-height: 0; }
@@ -2079,6 +2103,30 @@ body { color: var(--ink); background-color: var(--paper); }
 .code-live-page > header { display: flex; min-height: 48px; padding: 0 14px; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #29383b; background: #172327; font-size: 11px; }
 .code-live-page > header a { color: #83cfb4; font-weight: 700; text-decoration: none; }
 .code-live-page > header span { overflow: hidden; color: #a7b9b2; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 800px) {
+  .code-route-shell .code-studio,
+  .code-route-shell .code-topbar,
+  .code-route-shell .code-editor-column,
+  .code-route-shell .code-main-panes,
+  .code-route-shell .code-editor-body,
+  .code-route-shell .code-preview-pane,
+  .code-route-shell .code-statusbar { color: #ededed; background: #1e1e1e; }
+  .code-route-shell .code-editor-tabs,
+  .code-route-shell .code-mobile-shortcuts,
+  .code-route-shell .code-mobile-direction-keys,
+  .code-route-shell .code-explorer-heading,
+  .code-route-shell .code-explorer-project,
+  .code-route-shell .code-explorer-account { border-color: #2d2d2d; background: #181818; }
+  .code-route-shell .code-open-file-tab { color: #9c9c9c; background: #181818; }
+  .code-route-shell .code-open-file-tab.is-active { border-top-color: #007acc; color: #fff; background: #1e1e1e; }
+  .code-route-shell .code-mobile-menu-button,
+  .code-route-shell .code-mobile-more-button,
+  .code-route-shell .code-run-button { color: #d3d3d3; background: transparent; }
+  .code-route-shell .code-mobile-shortcuts button { color: #d1d1d1; background: #252526; }
+  .code-route-shell .code-mobile-direction-keys button { color: #9a9a9a; background: transparent; }
+  .code-route-shell .code-editor-status { color: #858585; background: #181818; }
+}
 .code-live-preview { display: flex; min-width: 0; min-height: 0; flex: 1; flex-direction: column; }
 .code-live-toolbar { display: flex; min-height: 39px; padding: 0 12px; align-items: center; gap: 12px; border-bottom: 1px solid #29383b; color: #dbe7e1; background: #142125; font-size: 11px; }
 .code-live-toolbar > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -2116,6 +2164,345 @@ body { color: var(--ink); background-color: var(--paper); }
 .code-route-shell .code-dialog-icon,
 .code-route-shell .code-dialog-icon.is-ai,
 .code-route-shell .code-ai-avatar { border-color: var(--focus); color: var(--secondary); background: var(--surface-secondary); }
+
+.code-mobile-menu-button,
+.code-mobile-current-name,
+.code-mobile-edit-name,
+.code-mobile-header-search,
+.code-mobile-more-button,
+.code-mobile-shortcuts,
+.code-mobile-direction-keys,
+.code-mobile-home-indicator,
+.code-mobile-editor-fab,
+.code-mobile-menu,
+.code-mobile-search,
+.code-mobile-activity-rail,
+.code-mobile-problems,
+.code-mobile-drawer-backdrop { display: none; }
+
+@media (max-width: 800px) {
+  .code-route-shell .code-topbar {
+    min-height: 44px !important;
+    height: 44px !important;
+    padding: 0 8px;
+    gap: 7px;
+    border-bottom: 1px solid #2d2d2d;
+    background: #1e1e1e;
+  }
+  .code-route-shell .code-mobile-menu-button,
+  .code-route-shell .code-mobile-header-search,
+  .code-route-shell .code-mobile-edit-name,
+  .code-route-shell .code-mobile-more-button {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    place-items: center;
+    border: 0;
+    border-radius: 4px;
+    color: #ffffff;
+    background: transparent;
+  }
+  .code-route-shell .code-mobile-menu-button:hover,
+  .code-route-shell .code-mobile-header-search:hover,
+  .code-route-shell .code-mobile-edit-name:hover,
+  .code-route-shell .code-mobile-more-button:hover,
+  .code-route-shell .code-mobile-menu-button:active,
+  .code-route-shell .code-mobile-header-search:active,
+  .code-route-shell .code-mobile-edit-name:active,
+  .code-route-shell .code-mobile-more-button:active,
+  .code-route-shell .code-mobile-menu-button:focus-visible,
+  .code-route-shell .code-mobile-header-search:focus-visible,
+  .code-route-shell .code-mobile-edit-name:focus-visible,
+  .code-route-shell .code-mobile-more-button:focus-visible {
+    border: 0;
+    outline: none;
+    color: #ffffff;
+    background: #2d2d2d;
+    box-shadow: none;
+  }
+  .code-route-shell .code-mobile-current-name {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 1px;
+    overflow: hidden;
+  }
+  .code-route-shell .code-mobile-current-name strong {
+    overflow: hidden;
+    color: #f1f1f1;
+    font-size: 13px;
+    line-height: 15px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .code-route-shell .code-mobile-current-name span {
+    overflow: hidden;
+    color: #9b9b9b;
+    font: 9px/11px var(--font-body);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .code-route-shell .code-run-button { display: none; }
+  .code-route-shell .code-mobile-menu-button { order: 0; }
+  .code-route-shell .code-mobile-current-name { order: 1; }
+  .code-route-shell .code-mobile-edit-name { order: 2; }
+  .code-route-shell .code-mobile-header-search { order: 3; }
+  .code-route-shell .code-mobile-more-button { order: 4; }
+
+  .code-route-shell .code-workbench {
+    width: 100%;
+    height: calc(100dvh - 44px);
+    min-height: 0;
+    background: #1e1e1e;
+  }
+  .code-route-shell .code-main-panes {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+  .code-route-shell .code-editor-column {
+    width: 100%;
+    height: 100%;
+  }
+  .code-route-shell .code-editor-body {
+    height: auto;
+    min-height: 0;
+    flex: 1;
+  }
+  .code-route-shell .code-mobile-drawer-backdrop {
+    position: absolute;
+    z-index: 170;
+    inset: 44px 0 0;
+    display: block;
+    width: 100%;
+    height: calc(100% - 44px);
+    border: 0;
+    background: rgb(0 0 0 / 50%);
+  }
+  .code-route-shell .code-editor-tabs {
+    min-height: 38px !important;
+    height: 38px !important;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-bottom: 1px solid #2d2d2d;
+    background: #181818;
+    scrollbar-width: none;
+  }
+  .code-route-shell .code-editor-tabs::-webkit-scrollbar { display: none; }
+  .code-route-shell .code-open-file-tab {
+    min-width: 112px;
+    max-width: 150px;
+    height: 38px;
+    padding: 0 9px;
+    gap: 5px;
+    flex: 0 0 auto;
+    border: 0;
+    border-right: 1px solid #2d2d2d;
+    border-top: 0;
+    color: #9d9d9d;
+    background: #181818;
+    font-size: 11px;
+  }
+  .code-route-shell .code-open-file-tab.is-active {
+    border-top: 2px solid #007acc;
+    color: #fff;
+    background: #1e1e1e;
+  }
+  .code-route-shell .code-open-file-tab > svg:last-child { margin-left: auto; color: #777; }
+  .code-route-shell .code-mobile-problems {
+    position: sticky;
+    z-index: 4;
+    right: 0;
+    display: flex;
+    min-width: 76px;
+    width: 76px;
+    height: 38px;
+    margin: 0 0 0 auto;
+    flex: 0 0 76px;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: 0;
+    border-left: 1px solid #7d2525;
+    border-radius: 0;
+    color: #fff;
+    background: #b20e0e;
+    box-shadow: -5px 0 8px #181818;
+    font-size: 9px;
+    font-weight: 800;
+  }
+  .code-route-shell .code-editor-tab-actions { display: none; }
+  .code-route-shell .code-editor-status { display: none; }
+
+  .code-route-shell .code-editor-body {
+    height: auto;
+    min-height: 0;
+    flex: 1;
+    background: #1e1e1e;
+  }
+  .code-route-shell .code-editor-body .CodeMirror {
+    position: relative;
+    z-index: 2;
+    display: block !important;
+    background: #1e1e1e !important;
+    color: #d4d4d4 !important;
+    font: 13px/1.7 var(--font-body);
+  }
+  .code-route-shell .code-editor-body .CodeMirror-scroll { height: 100%; background: #1e1e1e; }
+  .code-route-shell .code-editor-body .CodeMirror-gutters { border-right: 1px solid #272727; background: #1e1e1e !important; }
+  .code-route-shell .code-editor-body .CodeMirror-linenumber { color: #858585; }
+  .code-route-shell .code-editor-body .CodeMirror-cursor { border-left-color: #d4d4d4; }
+  .code-route-shell .code-editor-body .cm-keyword { color: #c586c0; }
+  .code-route-shell .code-editor-body .cm-variable { color: #9cdcfe; }
+  .code-route-shell .code-editor-body .cm-property { color: #dcdcaa; }
+  .code-route-shell .code-editor-body .cm-string { color: #ce9178; }
+  .code-route-shell .code-editor-body .cm-number { color: #b5cea8; }
+  .code-route-shell .code-editor-body .cm-comment { color: #6a9955; }
+  .code-route-shell .code-editor-body .cm-def { color: #dcdcaa; }
+  .code-route-shell .code-editor-body .cm-tag { color: #569cd6; }
+  .code-route-shell .code-editor-body .cm-attribute { color: #9cdcfe; }
+  .code-route-shell .code-editor-body .cm-builtin { color: #4ec9b0; }
+  .code-route-shell .code-mobile-editor-fab { display: grid; right: 14px; bottom: 14px; width: 40px; height: 40px; border: 1px solid #3e4451; background: #282c34; }
+
+  .code-route-shell .code-mobile-shortcuts {
+    display: flex;
+    min-height: 38px;
+    height: 38px;
+    padding: 5px 8px;
+    border-top: 1px solid #292929;
+    background: #181818;
+  }
+  .code-route-shell .code-mobile-shortcuts button { height: 27px; min-width: 31px; border: 0; color: #d1d1d1; background: #252526; }
+  .code-route-shell .code-mobile-direction-keys { display: flex; min-height: 34px; height: 34px; border-top: 1px solid #202020; background: #121212; }
+  .code-route-shell .code-mobile-direction-keys button { color: #8f8f8f; }
+  .code-route-shell .code-mobile-home-indicator { display: flex; min-height: 16px; height: 16px; align-items: center; justify-content: center; background: #121212; }
+  .code-route-shell .code-mobile-home-indicator span { width: 112px; height: 4px; border-radius: 99px; background: #626262; opacity: .65; }
+
+  .code-route-shell .code-statusbar { display: none; }
+  .code-route-shell .code-terminal-resize,
+  .code-route-shell .code-terminal-panel { display: none; }
+
+  .code-route-shell .code-explorer {
+    position: absolute;
+    z-index: 180;
+    inset: 0 auto 0 0;
+    display: none;
+    width: min(310px, 76vw, calc(100vw - 48px));
+    min-width: 0;
+    max-width: 310px;
+    overflow: hidden;
+    border: 0;
+    border-right: 0;
+    background: #25272a;
+  }
+  .code-route-shell .code-explorer.is-mobile-open {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr) 27px;
+  }
+  .code-route-shell .code-mobile-activity-rail {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    width: 48px;
+    min-width: 48px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border: 0;
+    border-right: 0;
+    background: #121212;
+  }
+  .code-route-shell .code-mobile-activity-rail > div { display: grid; gap: 20px; }
+  .code-route-shell .code-mobile-activity-rail button { display: grid; width: 48px; height: 32px; place-items: center; border: 0; color: #7e7e7e; background: transparent; }
+  .code-route-shell .code-mobile-activity-rail button.is-active {
+    border: 0;
+    border-left: 0;
+    color: #ffffff;
+    background: transparent;
+  }
+  .code-route-shell .code-explorer-heading {
+    display: none;
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 44px;
+    height: 44px;
+    padding: 0 10px;
+    border-bottom: 1px solid #2d2d2d;
+    background: #181818;
+  }
+  .code-route-shell .code-explorer-project { grid-column: 2; grid-row: 1; width: 100%; min-width: 0; min-height: 44px; }
+  .code-route-shell .code-explorer-actions { grid-column: 2; grid-row: 2; width: 100%; min-width: 0; }
+  .code-route-shell .code-explorer-search { grid-column: 2; grid-row: 3; width: auto; min-width: 0; }
+  .code-route-shell .code-explorer-form { grid-column: 2; grid-row: 4; min-width: 0; }
+  .code-route-shell .code-explorer-tree { grid-column: 2; grid-row: 4; min-width: 0; overflow-x: hidden; overflow-y: auto; }
+  .code-route-shell .code-explorer-account { grid-column: 2; grid-row: 5; width: 100%; min-width: 0; }
+
+  .code-route-shell .code-mobile-menu {
+    position: absolute;
+    z-index: 120;
+    top: 40px;
+    right: 7px;
+    display: grid;
+    width: min(256px, calc(100vw - 24px));
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
+    padding: 5px 0;
+    border: 1px solid #3e3e42;
+    border-radius: 4px;
+    background: #252526;
+    box-shadow: 0 12px 30px #0009;
+  }
+  .code-route-shell .code-mobile-menu button { min-height: 36px; border: 0; color: #ededed; background: transparent; }
+  .code-route-shell .code-mobile-menu button:hover { background: #37373d; }
+  .code-route-shell .code-mobile-menu-divider { border-bottom: 1px solid #333 !important; }
+
+  .code-route-shell .code-mobile-search {
+    position: absolute;
+    z-index: 110;
+    top: 44px;
+    right: 0;
+    left: 0;
+    display: grid;
+    max-height: min(380px, calc(100dvh - 52px));
+    overflow-y: auto;
+    border-bottom: 1px solid #333;
+    background: #212121;
+  }
+  .code-route-shell .code-mobile-search-results {
+    display: grid;
+    max-height: 250px;
+    overflow-y: auto;
+    gap: 3px;
+  }
+  .code-route-shell .code-mobile-search-results button {
+    display: flex;
+    min-height: 36px;
+    padding: 0 8px;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 4px;
+    color: #ededed;
+    background: transparent;
+    text-align: left;
+  }
+  .code-route-shell .code-mobile-search-results button:hover,
+  .code-route-shell .code-mobile-search-results button:active { background: #37373d; }
+  .code-route-shell .code-dialog-file-name { display: grid; margin: 14px 0 8px; gap: 7px; color: #b5c2bd; font-size: 11px; }
+  .code-route-shell .code-dialog-file-name input { width: 100%; height: 38px; padding: 0 10px; border: 1px solid #405456; border-radius: 4px; outline: none; color: #eef5f1; background: #111d20; }
+  .code-route-shell .code-dialog-file-name input:focus { border-color: #83cfb4; }
+  .code-route-shell .code-dialog-error { display: block; margin: 0 0 12px; color: #f3aaa2; font-size: 11px; }
+}
 
 .onecompiler-app { grid-template-columns: 52px minmax(0, 1fr); grid-template-rows: 54px minmax(0, 1fr) 30px; font-size: 12px; }
 .onecompiler-app .oc-navbar { display: flex; padding: 0 14px; }
@@ -2823,14 +3210,7 @@ body { color: var(--ink); background-color: var(--paper); }
   .code-route-shell .code-explorer-row { height: 40px; }
   .code-route-shell .code-folder-row,
   .code-route-shell .code-file-row > button { font-size: 13px; }
-  .code-route-shell .code-workbench:has(.code-explorer.is-mobile-open)::before {
-    position: absolute;
-    z-index: 14;
-    inset: 0;
-    content: "";
-    background: rgba(5, 12, 14, .48);
-  }
-  .code-route-shell .code-explorer.is-mobile-open { z-index: 15; }
+  .code-route-shell .code-explorer.is-mobile-open { z-index: 190; }
   .code-route-shell .code-editor-tabs,
   .code-route-shell .code-preview-toolbar,
   .code-route-shell .code-right-tabs { min-height: 44px; }
@@ -3996,4 +4376,455 @@ body, :root[data-theme="dark"] body {
 
 @media (prefers-reduced-motion: reduce) {
   .admin-sidebar, .admin-main, .admin-drawer-backdrop { transition-duration: .01ms; }
+}
+
+@media (max-width: 800px) {
+  .code-route-shell .code-studio { width: 100vw; max-width: 100vw; height: 100dvh; min-height: 100dvh; overflow: hidden; }
+  .code-route-shell .code-workbench { width: 100vw; max-width: 100vw; overflow: hidden; }
+  .code-route-shell .code-topbar { min-height: 44px !important; height: 44px !important; }
+  .code-route-shell .code-editor-tabs { min-height: 38px !important; height: 38px !important; }
+  .code-route-shell .code-editor-body { overflow: hidden; }
+  .code-route-shell .code-editor-body > textarea { display: none; }
+  .code-route-shell .code-mobile-reference-editor {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    display: flex;
+    overflow: auto;
+    background: #1e1e1e;
+  }
+  .code-route-shell .code-mobile-line-gutter {
+    width: 40px;
+    min-width: 40px;
+    padding: 8px 8px 64px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    border-right: 1px solid #272727;
+    color: #858585;
+    background: #1e1e1e;
+    font: 12px/22.1px 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    user-select: none;
+  }
+  .code-route-shell .code-mobile-line-gutter span { height: 22.1px; }
+  .code-route-shell .code-mobile-line-gutter .has-fold { color: #b5b5b5; font-weight: 700; }
+  .code-route-shell .code-mobile-reference-code {
+    min-width: max-content;
+    margin: 0;
+    padding: 8px 24px 64px 12px;
+    color: #d4d4d4;
+    background: #1e1e1e;
+    font: 13px/22.1px 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    white-space: pre;
+  }
+  .code-route-shell .code-mobile-editor-fab {
+    position: absolute;
+    z-index: 8;
+    right: 14px;
+    bottom: 14px;
+    display: grid;
+  }
+  .code-route-shell .code-topbar .code-mobile-menu-button,
+  .code-route-shell .code-topbar .code-mobile-header-search,
+  .code-route-shell .code-topbar .code-mobile-edit-name,
+  .code-route-shell .code-topbar .code-mobile-more-button {
+    color: #ffffff !important;
+  }
+  .code-route-shell .code-topbar .code-mobile-menu-button svg,
+  .code-route-shell .code-topbar .code-mobile-header-search svg,
+  .code-route-shell .code-topbar .code-mobile-edit-name svg,
+  .code-route-shell .code-topbar .code-mobile-more-button svg {
+    color: #ffffff !important;
+    fill: currentColor;
+  }
+  .code-route-shell .code-topbar .code-mobile-menu-button svg,
+  .code-route-shell .code-topbar .code-mobile-header-search svg,
+  .code-route-shell .code-topbar .code-mobile-edit-name svg {
+    fill: none;
+    stroke: #ffffff !important;
+  }
+  .code-route-shell .code-topbar .code-mobile-menu-button:hover,
+  .code-route-shell .code-topbar .code-mobile-header-search:hover,
+  .code-route-shell .code-topbar .code-mobile-edit-name:hover,
+  .code-route-shell .code-topbar .code-mobile-more-button:hover,
+  .code-route-shell .code-topbar .code-mobile-menu-button:active,
+  .code-route-shell .code-topbar .code-mobile-header-search:active,
+  .code-route-shell .code-topbar .code-mobile-edit-name:active,
+  .code-route-shell .code-topbar .code-mobile-more-button:active,
+  .code-route-shell .code-topbar .code-mobile-menu-button:focus,
+  .code-route-shell .code-topbar .code-mobile-header-search:focus,
+  .code-route-shell .code-topbar .code-mobile-edit-name:focus,
+  .code-route-shell .code-topbar .code-mobile-more-button:focus,
+  .code-route-shell .code-topbar .code-mobile-menu-button:focus-visible,
+  .code-route-shell .code-topbar .code-mobile-header-search:focus-visible,
+  .code-route-shell .code-topbar .code-mobile-edit-name:focus-visible,
+  .code-route-shell .code-topbar .code-mobile-more-button:focus-visible {
+    border: 0 !important;
+    outline: none !important;
+    color: #ffffff !important;
+    background: #2d2d2d !important;
+    background-image: none !important;
+    box-shadow: none !important;
+  }
+  .code-route-shell .code-mobile-shortcuts { display: flex !important; min-height: 38px; height: 38px; }
+  .code-route-shell .code-mobile-direction-keys { display: flex !important; min-height: 34px; height: 34px; }
+  .code-route-shell .code-mobile-home-indicator { display: flex !important; min-height: 16px; height: 16px; }
+  .code-route-shell .code-explorer.is-mobile-open,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-heading,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    color: #d1d5db;
+    background: #181818;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail {
+    color: #9d9d9d;
+    background: #121212;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row {
+    min-height: 40px;
+    height: 40px;
+    padding-right: 8px;
+    max-width: 100%;
+    overflow: hidden;
+    color: #c9c9c9;
+  }
+  .code-route-shell .code-explorer.is-mobile-open,
+  .code-route-shell .code-explorer.is-mobile-open * {
+    border-radius: 0;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-heading,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row {
+    border-color: #2d2d2d !important;
+    color: #c9c9c9 !important;
+    background: #181818 !important;
+    box-shadow: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child span,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row span,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project strong,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-heading,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-heading span {
+    color: #e5e7eb !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-close,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:last-child {
+    display: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:active,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:focus-visible {
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button svg {
+    color: #9b9b9b;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button.is-active svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:hover svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:active svg {
+    color: #ffffff;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row.is-selected,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row.is-selected {
+    border: 0 !important;
+    border-left: 0 !important;
+    outline: none !important;
+    background: #25272a !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-heading > span,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project strong,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child span,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row span,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    color: #e5e7eb !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open {
+    background: #202124 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    background: #202124 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project strong,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child span,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row span,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    color: #f1f3f4 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form {
+    border-color: #45484d !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search input,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form input {
+    color: #f5f7f8 !important;
+    background: #303236 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open {
+    background: #25272a !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    background: #25272a !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project strong,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child span,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row span,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search input::placeholder {
+    color: #f5f7f8 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search {
+    border-color: #4a4d52 !important;
+    background: #303236 !important;
+  }
+  .code-route-shell .code-mobile-drawer-backdrop {
+    z-index: 170 !important;
+    right: 0 !important;
+    left: min(310px, 76vw) !important;
+    width: calc(100% - min(310px, 76vw)) !important;
+    background: rgb(0 0 0 / 22%) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+  .code-route-shell .code-workbench,
+  .code-route-shell .code-workbench:has(.code-explorer.is-mobile-open),
+  .code-route-shell .code-main-panes {
+    position: relative;
+    z-index: 40 !important;
+    background: #1e1e1e !important;
+  }
+  .code-route-shell .code-editor-column,
+  .code-route-shell .code-editor-body {
+    background: #1e1e1e !important;
+  }
+  .code-route-shell .code-workbench:has(.code-explorer.is-mobile-open) .code-editor-column {
+    position: absolute;
+    z-index: 40;
+    inset: 0;
+    display: flex;
+  }
+  .code-route-shell .code-workbench:has(.code-explorer.is-mobile-open) .code-editor-column::after {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    content: "";
+    background: #1e1e1e;
+  }
+  .code-route-shell .code-explorer.is-mobile-open,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row {
+    border: 0 !important;
+    border-right: 0 !important;
+    border-left: 0 !important;
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+  }
+  .code-route-shell .code-mobile-reference-editor,
+  .code-route-shell .code-mobile-reference-code,
+  .code-route-shell .code-mobile-line-gutter {
+    opacity: 1 !important;
+    filter: none !important;
+  }
+  .code-route-shell .code-mobile-reference-code {
+    color: #d4d4d4 !important;
+  }
+  .code-route-shell .code-mobile-line-gutter {
+    color: #858585 !important;
+    background: #1e1e1e !important;
+  }
+  .code-route-shell .code-editor-tabs .code-open-file-tab,
+  .code-route-shell .code-editor-tabs .code-mobile-problems {
+    align-self: stretch;
+  }
+  .code-route-shell .code-editor-tabs .code-open-file-tab:not(.is-active) {
+    border-top: 0;
+  }
+  .code-route-shell .code-editor-tabs .code-open-file-tab.is-active {
+    min-width: 112px;
+    border-top: 2px solid #007acc;
+  }
+}
+
+@media (max-width: 800px) {
+  .code-route-shell .code-explorer.is-mobile-open [title],
+  .code-route-shell .code-explorer.is-mobile-open [title]:hover {
+    text-decoration: none;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row:focus-within,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row:focus-within {
+    color: #f1f3f4 !important;
+    background: #25272a !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row::after,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row::before {
+    content: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open {
+    z-index: 190 !important;
+    width: min(310px, 76vw, calc(100vw - 48px)) !important;
+    max-width: 310px !important;
+    min-width: 0 !important;
+    box-shadow: 12px 0 28px rgb(0 0 0 / 32%) !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail {
+    z-index: 191 !important;
+    width: 48px !important;
+    min-width: 48px !important;
+    background: #121212 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-search,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-form,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    background: #25272a !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-project strong,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:first-child span,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row span,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-account {
+    color: #f1f3f4 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree::-webkit-scrollbar,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-tree *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row,
+  .code-route-shell .code-explorer.is-mobile-open button,
+  .code-route-shell .code-explorer.is-mobile-open button:active,
+  .code-route-shell .code-explorer.is-mobile-open button:focus,
+  .code-route-shell .code-explorer.is-mobile-open button:focus-visible,
+  .code-route-shell .code-explorer.is-mobile-open button:focus-within {
+    border: 0 !important;
+    outline: 0 !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row::before,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row::after,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row::before,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row::after,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button::before,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button::after,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row > *::before,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row > *::after {
+    content: none !important;
+    display: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row:focus-within,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-folder-row:focus-within {
+    border: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    outline: none !important;
+    background: #252526 !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button:active,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button:focus-visible {
+    color: #ffffff !important;
+    background: transparent !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button svg *,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button:hover svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-explorer-actions button:hover svg * {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+    fill: none !important;
+  }
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button.is-active,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button.is-active svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:hover svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:active svg,
+  .code-route-shell .code-explorer.is-mobile-open .code-mobile-activity-rail button:focus-visible svg {
+    color: #ffffff !important;
+    fill: none;
+  }
+  .code-route-shell .code-mobile-drawer-backdrop {
+    z-index: 170 !important;
+  }
 }

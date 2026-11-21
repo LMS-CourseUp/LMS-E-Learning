@@ -123,6 +123,25 @@ function filterExplorerTree(nodes: ExplorerNode[], query: string): ExplorerNode[
   return filtered;
 }
 
+function renderMobileCode(content: string, name: string) {
+  const extension = extensionOf(name);
+  return content.split("\n").map((line, lineIndex) => {
+    const tokens = line.split(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|<!--.*?-->|<\/?[A-Za-z][^>]*>|#[0-9A-Fa-f]{3,8}|\b(?:const|let|var|function|return|new|class|import|from|export|default|document|true|false|null|undefined)\b|\b\d+(?:\.\d+)?\b|\/\/.*$)/g);
+    return <span key={lineIndex}>{tokens.map((token, tokenIndex) => {
+      if (!token) return null;
+      let color = extension === "css" ? "#d4d4d4" : "#d4d4d4";
+      if (/^"|^'/.test(token)) color = "#ce9178";
+      else if (/^<!--|^<\/?[A-Za-z]/.test(token)) color = extension === "html" || extension === "htm" ? "#569cd6" : "#c586c0";
+      else if (/^#[0-9A-Fa-f]/.test(token)) color = "#b5cea8";
+      else if (/\b(?:const|let|var|function|return|new|class|import|from|export|default|document|true|false|null|undefined)\b/.test(token)) color = "#c586c0";
+      else if (/^\d/.test(token)) color = "#b5cea8";
+      else if (/^\/\//.test(token)) color = "#6a9955";
+      else if (extension === "css" && /^[A-Za-z-]+$/.test(token.trim())) color = "#9cdcfe";
+      return <span key={tokenIndex} style={{ color }}>{token}</span>;
+    })}{lineIndex < content.split("\n").length - 1 ? "\n" : ""}</span>;
+  });
+}
+
 function editorModeForName(name: string) {
   const extension = extensionOf(name);
   if (extension === "html" || extension === "htm") return "htmlmixed";
@@ -264,9 +283,13 @@ export default function CodeStudio() {
   const [aiError, setAiError] = useState("");
   const [output, setOutput] = useState<OutputLine[]>([]);
   const [activePanel, setActivePanel] = useState<"explorer" | "editor" | "preview">("editor");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [newFileOpen, setNewFileOpen] = useState(false);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFileName, setNewFileName] = useState("");
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [renameName, setRenameName] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [newFileError, setNewFileError] = useState("");
   const [explorerSearch, setExplorerSearch] = useState("");
@@ -294,6 +317,10 @@ export default function CodeStudio() {
 
   const activeFile = files.find((file) => file.name === activeName) ?? files[0];
   const activeExtension = activeFile ? extensionOf(activeFile.name) : "";
+  const searchQuery = explorerSearch.trim().toLowerCase();
+  const searchMatches = useMemo(() => searchQuery
+    ? files.filter((file) => file.name.toLowerCase().includes(searchQuery) || file.content.toLowerCase().includes(searchQuery))
+    : [], [files, searchQuery]);
   const nativeMode = ["tsx", "jsx"].includes(activeExtension);
   const phpMode = activeExtension === "php";
   const explorerTree = useMemo(() => buildExplorerTree(files, folders), [files, folders]);
@@ -443,6 +470,7 @@ export default function CodeStudio() {
     aiMessagesEndRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
   }, [aiMessages, aiSending]);
 
+
   function addOutput(text: string, level: OutputLine["level"] = "info") {
     setOutput((current) => [...current.slice(-149), { id: nextLogId.current++, level, text }]);
   }
@@ -488,6 +516,37 @@ export default function CodeStudio() {
     setNewFileName("");
     setNewFileError("");
     setNewFileOpen(false);
+  }
+
+  function openRenameDialog() {
+    setRenameName(activeFile?.name ?? "");
+    setNewFileError("");
+    setRenameDialogOpen(true);
+  }
+
+  function renameActiveFile(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    const nextName = renameName.trim();
+    if (!activeFile || !isValidWorkspacePath(nextName) || !allowedExtensions.has(extensionOf(nextName))) {
+      setNewFileError("Nama file atau formatnya tidak valid.");
+      return;
+    }
+    if (nextName !== activeFile.name && files.some((file) => file.name.toLowerCase() === nextName.toLowerCase())) {
+      setNewFileError("File dengan nama tersebut sudah ada.");
+      return;
+    }
+    setFiles((current) => current.map((file) => file.name === activeFile.name ? { ...file, name: nextName } : file));
+    setActiveName(nextName);
+    setFolders((current) => current.map((folder) => {
+      if (folder === activeFile.name) return nextName;
+      if (activeFile.name.includes("/") && folder === activeFile.name.slice(0, activeFile.name.lastIndexOf("/"))) {
+        return nextName.includes("/") ? nextName.slice(0, nextName.lastIndexOf("/")) : "";
+      }
+      return folder;
+    }).filter(Boolean));
+    setIsDirty(true);
+    setRenameDialogOpen(false);
+    setNewFileError("");
   }
 
   function createFolder(event?: FormEvent<HTMLFormElement>) {
@@ -668,7 +727,7 @@ export default function CodeStudio() {
       }
       return <div key={node.path} className={`code-explorer-row code-file-row ${activeName === node.path ? "is-selected" : ""}`} style={{ paddingLeft: 27 + depth * 14 }}>
         <button type="button" onClick={() => selectFile(node.path)}>{fileTypeIcon(node.name)}<span>{node.name.split("/").at(-1)}</span></button>
-        <button type="button" aria-label={`Hapus ${node.path}`} title="Hapus file" onClick={() => removeFile(node.path)}><X size={12} /></button>
+        <button type="button" aria-label={`Hapus ${node.path}`} onClick={() => removeFile(node.path)}><X size={12} /></button>
       </div>;
     });
   }
@@ -775,7 +834,12 @@ export default function CodeStudio() {
 
   return <section className="code-studio" aria-label="Code editor workspace">
     <header className="code-topbar">
+      <button type="button" className="code-mobile-menu-button" aria-label={activePanel === "explorer" ? "Tutup file" : "Buka file"} title={activePanel === "explorer" ? "Tutup file" : "Buka file"} onClick={() => { setActivePanel((panel) => panel === "explorer" ? "editor" : "explorer"); setMobileMenuOpen(false); }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button>
       <button type="button" className="code-exit-button" aria-label="Kembali ke beranda" title="Kembali ke beranda" onClick={() => leaveEditor()}><ArrowLeft size={16} /><span>Kembali</span></button>
+      <div className="code-mobile-current-name"><strong>{activeFile?.name ?? "Pilih file"}</strong><span>.../project/{activeFile?.name ?? "file"}</span></div>
+      <button type="button" className="code-mobile-edit-name" aria-label="Edit nama file" title="Edit nama file" onClick={openRenameDialog}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+      <button type="button" className="code-mobile-header-search" aria-label="Cari dalam berkas" title="Cari dalam berkas" onClick={() => setMobileSearchOpen(true)}><Search size={16} /></button>
+      <button type="button" className="code-mobile-more-button" aria-label="Menu berkas" title="Menu berkas" onClick={() => setMobileMenuOpen((open) => !open)}><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" /></svg></button>
       <div className="code-brand"><span className="code-brand-mark"><Code2 size={16} /></span><strong>Editor <span>Kode</span></strong><span className="code-project-name">Project Saya</span></div>
       <div className="code-top-actions">
         <span className={`code-sync-state is-${isDirty ? "saving" : syncState}`} title={isDirty ? "Perubahan belum tersimpan" : syncMessage}><span className="code-sync-dot" />{isDirty ? "Belum disimpan" : syncState === "loading" ? "Memuat" : syncState === "saving" ? "Menyimpan" : syncState === "saved" ? "Tersimpan" : syncState === "local" ? "Lokal" : "Offline"}</span>
@@ -785,20 +849,41 @@ export default function CodeStudio() {
       </div>
     </header>
 
-    <div className="code-mobile-switch" role="tablist" aria-label="Panel editor">
-      <button type="button" role="tab" aria-selected={activePanel === "explorer"} aria-controls="code-explorer-panel" className={activePanel === "explorer" ? "is-active" : ""} onClick={() => setActivePanel("explorer")}><Folder size={14} />Files</button>
-      <button type="button" role="tab" aria-selected={activePanel === "editor"} aria-controls="code-editor-panel" className={activePanel === "editor" ? "is-active" : ""} onClick={() => setActivePanel("editor")}><Code2 size={14} />Editor</button>
-      <button type="button" role="tab" aria-selected={activePanel === "preview"} aria-controls="code-preview-panel" className={activePanel === "preview" ? "is-active" : ""} onClick={() => setActivePanel("preview")}><PanelRight size={14} />Preview</button>
-    </div>
+    {mobileMenuOpen && <div className="code-mobile-menu" role="menu">
+      <button type="button" role="menuitem" onClick={() => { setNewFileOpen(true); setActivePanel("explorer"); setMobileMenuOpen(false); }}><FilePlus2 size={15} /><span>Berkas baru</span></button>
+      <button type="button" role="menuitem" onClick={() => { void saveWorkspace(); setMobileMenuOpen(false); }}><Save size={15} /><span>Simpan</span></button>
+      <button type="button" role="menuitem" onClick={() => { setNewFileOpen(true); setActivePanel("explorer"); setMobileMenuOpen(false); }}><Save size={15} /><span>Simpan sebagai</span></button>
+      <button type="button" role="menuitem" onClick={() => setActivePanel("explorer")}><Folder size={15} /><span>Berkas</span></button>
+      <button type="button" role="menuitem" className="code-mobile-menu-divider" onClick={() => setActivePanel("editor")}><X size={15} /><span>Tutup berkas</span></button>
+      <button type="button" role="menuitem" onClick={() => { setMobileMenuOpen(false); setActivePanel("explorer"); }}><FolderOpen size={15} /><span>Buka yang baru-baru ini</span></button>
+      <button type="button" role="menuitem" onClick={() => { setMobileSearchOpen(true); setMobileMenuOpen(false); }}><Search size={15} /><span>Temukan berkas</span></button>
+      <button type="button" role="menuitem" onClick={() => { setActivePanel("preview"); setMobileMenuOpen(false); }}><Code2 size={15} /><span>Konsol</span></button>
+      <button type="button" role="menuitem" onClick={() => { setActivePanel("preview"); setMobileMenuOpen(false); }}><Terminal size={15} /><span>Terminal</span></button>
+      <button type="button" role="menuitem" className="code-mobile-menu-divider"><CircleAlert size={15} /><span>Proses yang berjalan</span></button>
+      <button type="button" role="menuitem" onClick={() => { setActivePanel("preview"); openAiPanel(); setMobileMenuOpen(false); }}><Sparkles size={15} /><span>Bantuan AI</span></button>
+      <button type="button" role="menuitem" onClick={() => leaveEditor()}><ArrowLeft size={15} /><span>Keluar</span></button>
+    </div>}
+
+    {mobileSearchOpen && <div className="code-mobile-search" role="search">
+      <div><strong>Cari dalam berkas</strong><button type="button" aria-label="Tutup pencarian" onClick={() => setMobileSearchOpen(false)}><X size={15} /></button></div>
+      <label><Search size={14} /><input value={explorerSearch} onChange={(event) => setExplorerSearch(event.target.value)} placeholder="Cari..." autoFocus /></label>
+      <span>{searchQuery ? `${searchMatches.length} hasil dalam ${searchMatches.length} berkas` : "0 hasil dalam 0 berkas"}</span>
+      {searchQuery && searchMatches.length > 0 && <div className="code-mobile-search-results">
+        {searchMatches.map((file) => <button type="button" key={file.name} onClick={() => { selectFile(file.name); setMobileSearchOpen(false); }}><FileCode2 size={13} /><span>{file.name}</span></button>)}
+      </div>}
+    </div>}
 
     <div className="code-workbench">
       <aside id="code-explorer-panel" className={`code-explorer ${activePanel === "explorer" ? "is-mobile-open" : ""}`} aria-label="Explorer project">
-        <div className="code-explorer-heading"><span>File dan folder</span><button type="button" className="code-explorer-close" aria-label="Tutup panel file" title="Tutup panel file" onClick={() => setActivePanel("editor")}><X size={16} /></button></div>
+        <nav className="code-mobile-activity-rail" aria-label="Activity bar">
+          <div><button type="button" className="is-active" aria-label="Explorer"><Folder size={20} /></button><button type="button" aria-label="Search" onClick={() => setMobileSearchOpen(true)}><Search size={20} /></button><button type="button" aria-label="Extensions"><Sparkles size={20} /></button><button type="button" aria-label="Favorites"><CircleAlert size={20} /></button><button type="button" aria-label="Source Control"><Terminal size={20} /></button></div>
+          <button type="button" aria-label="Akun pengguna"><CircleAlert size={20} /></button>
+        </nav>
         <button type="button" className="code-explorer-project" onClick={() => setActiveFolder("")}><ChevronDown size={13} /><strong>PROJECT SAYA</strong></button>
         <div className="code-explorer-actions">
-          <button type="button" aria-label="File baru" title="File baru" onClick={() => { setNewFileOpen((open) => !open); setNewFolderOpen(false); setNewFileError(""); }}><FilePlus2 size={15} /></button>
-          <button type="button" aria-label="Folder baru" title="Folder baru" onClick={toggleFolderDialog}><FolderPlus size={15} /></button>
-          <button type="button" aria-label="Simpan semua" title="Simpan semua" onClick={() => void saveWorkspace()}><Save size={14} /></button>
+          <button type="button" aria-label="File baru" onClick={() => { setNewFileOpen((open) => !open); setNewFolderOpen(false); setNewFileError(""); }}><FilePlus2 size={15} /></button>
+          <button type="button" aria-label="Folder baru" onClick={toggleFolderDialog}><FolderPlus size={15} /></button>
+          <button type="button" aria-label="Simpan semua" onClick={() => void saveWorkspace()}><Save size={14} /></button>
         </div>
         <label className="code-explorer-search"><Search size={13} /><input value={explorerSearch} placeholder="Cari file atau folder" onChange={(event) => setExplorerSearch(event.target.value)} /><kbd>⌘ P</kbd></label>
         {newFileOpen && <form className="code-explorer-form" onSubmit={createFile}>
@@ -819,24 +904,31 @@ export default function CodeStudio() {
         <div className="code-explorer-account"><span className="code-live-indicator" />{cloudSyncEnabled ? "Cloud workspace" : "Workspace lokal"}</div>
       </aside>
 
+      {activePanel === "explorer" && <button type="button" className="code-mobile-drawer-backdrop" aria-label="Tutup file" onClick={() => setActivePanel("editor")} />}
       <main className="code-main-panes" ref={mainPanesRef} style={{ gridTemplateColumns: `${paneRatio}fr 8px ${100 - paneRatio}fr` }}>
         <section id="code-editor-panel" className={`code-editor-column ${activePanel === "editor" ? "is-mobile-active" : ""}`} aria-label="Editor kode dan terminal">
           <div className="code-editor-tabs">
-            <div className="code-open-file-tab is-active">{activeFile ? fileTypeIcon(activeFile.name) : <FileText size={14} />}<span>{activeFile?.name ?? "Pilih file"}</span>{isDirty && <i title="Belum tersimpan" />}</div>
-            {activeFile && <span className="code-editor-path">{activeFile.name.replace(/[^/]+$/, "")}</span>}
-            <div className="code-editor-tab-actions"><span className="code-mode-label"><Braces size={13} />{modeLabel}</span><button type="button" className="code-ai-icon" onClick={openAiPanel} title="Tanya AI tentang project" aria-label="Buka AI assistant"><Sparkles size={14} /></button></div>
+            {files.slice(0, 4).map((file) => <button type="button" key={file.name} className={`code-open-file-tab ${activeName === file.name ? "is-active" : ""}`} onClick={() => selectFile(file.name)}>{fileTypeIcon(file.name)}<span>{file.name.split("/").at(-1)}</span><X size={11} /></button>)}
+            <button type="button" className="code-mobile-problems" aria-label="Masalah"><CircleAlert size={12} /><span>Masalah</span></button>
           </div>
           <div className="code-editor-body">
+            <button type="button" className="code-mobile-editor-fab" aria-label="Gulir editor" title="Gulir editor" onClick={(event) => { const body = event.currentTarget.parentElement?.querySelector(".CodeMirror-scroll") ?? event.currentTarget.parentElement; body?.scrollTo({ top: body.scrollHeight, behavior: "smooth" }); }}><ChevronDown size={20} /></button>
             <CodeMirrorEditor
               value={activeFile?.content ?? ""}
               mode={editorModeForName(activeFile?.name ?? "js")}
-              theme={editorDarkMode ? "material-darker" : "default"}
+              theme={editorDarkMode || (typeof window !== "undefined" && window.matchMedia("(max-width: 800px)").matches) ? "material-darker" : "default"}
               onChange={updateActiveContent}
               ariaLabel={`Editor ${activeFile?.name ?? "kode"}`}
             />
             {!ready && <div className="code-editor-loading">Menyiapkan workspace...</div>}
           </div>
           <div className="code-editor-status"><span>{activeFile?.name ?? ""}</span><span>{activeExtension.toUpperCase()}</span><span>UTF-8</span><span>LF</span><span>Spaces: 2</span></div>
+          <div className="code-mobile-shortcuts" aria-label="Pintasan keyboard mobile">
+            <div><button type="button">CTRL</button><button type="button" onClick={() => updateActiveContent(`${activeFile?.content ?? ""}  `)}>→|</button><button type="button">SHFT</button></div>
+            <div><button type="button" title="Simpan" onClick={() => void saveWorkspace()}><Save size={14} /></button><button type="button" title="Cari" onClick={() => setMobileSearchOpen(true)}><Search size={14} /></button><button type="button" title="Preview" onClick={() => void runCode()}><Play size={14} /></button><button type="button">ESC</button></div>
+          </div>
+          <div className="code-mobile-direction-keys" aria-label="Navigasi kursor"><button type="button">&lt;</button><button type="button">&gt;</button><button type="button">↑</button><button type="button">↓</button><button type="button">↵</button><button type="button">←</button><button type="button">→</button></div>
+          <div className="code-mobile-home-indicator"><span /></div>
           <div className="code-terminal-resize" role="separator" aria-orientation="horizontal" aria-label="Ubah tinggi terminal" onPointerDown={handleTerminalResize}><span /></div>
           <section className={`code-terminal-panel ${outputOpen ? "is-open" : "is-collapsed"}`} style={{ height: outputOpen ? `${terminalHeight}px` : "34px" }} aria-label="Terminal output">
             <div className="code-terminal-heading"><button type="button" onClick={() => setOutputOpen((open) => !open)}><ChevronDown size={13} className={outputOpen ? "" : "is-collapsed"} /><Terminal size={14} />{nativeMode ? "TERMINAL SIMULASI" : "TERMINAL"}</button><span>{output.length} baris</span><button type="button" className="code-terminal-clear" onClick={() => setOutput([])} aria-label="Hapus output" title="Hapus output"><Trash2 size={13} /></button></div>
@@ -896,6 +988,8 @@ export default function CodeStudio() {
     </div>
 
     <footer className="code-statusbar"><span><span className={`code-live-indicator ${isDirty ? "is-dirty" : ""}`} />{isDirty ? "Perubahan belum disimpan" : syncMessage}</span><span>{activeFile?.name ?? ""}</span><span>{(files.reduce((total, file) => total + new TextEncoder().encode(file.content).byteLength, 0) / 1024).toFixed(1)} KB / 20 MB</span></footer>
+
+    {renameDialogOpen && <div className="code-dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setRenameDialogOpen(false); }}><form className="code-dialog" role="dialog" aria-modal="true" aria-labelledby="code-rename-title" onSubmit={renameActiveFile}><button type="button" className="code-dialog-close" aria-label="Tutup" onClick={() => setRenameDialogOpen(false)}><X size={16} /></button><span className="code-dialog-icon"><FileText size={19} /></span><h2 id="code-rename-title">Ubah nama file</h2><p>Masukkan nama lengkap file, termasuk folder jika perlu.</p><label className="code-dialog-file-name"><span>Nama file</span><input value={renameName} onChange={(event) => { setRenameName(event.target.value); setNewFileError(""); }} autoFocus onKeyDown={(event) => { if (event.key === "Escape") setRenameDialogOpen(false); }} /></label>{newFileError && <small className="code-dialog-error" role="alert">{newFileError}</small>}<div><button type="button" className="code-dialog-secondary" onClick={() => setRenameDialogOpen(false)}>Batal</button><button type="submit" className="code-dialog-primary">Simpan nama</button></div></form></div>}
 
     {exitDialogOpen && <div className="code-dialog-backdrop" role="presentation"><section className="code-dialog" role="dialog" aria-modal="true" aria-labelledby="code-exit-title"><span className="code-dialog-icon"><CircleAlert size={19} /></span><h2 id="code-exit-title">Perubahan belum tersimpan</h2><p>Keluar sekarang tanpa menyimpan perubahan terakhir?</p><div><button type="button" className="code-dialog-secondary" onClick={() => setExitDialogOpen(false)}>Kembali ke editor</button><button type="button" className="code-dialog-danger" onClick={() => leaveEditor(true)}>Keluar tanpa simpan</button><button type="button" className="code-dialog-primary" onClick={async () => { if (await saveWorkspace()) leaveEditor(true); }}>Simpan & keluar</button></div></section></div>}
 
