@@ -1,0 +1,23 @@
+{
+  "servers": {
+    "windows-mcp": {
+      "type": "stdio",
+      "command": "py",
+      "args": [
+        "-m",
+        "uv",
+        "tool",
+        "run",
+        "--python",
+        "3.14",
+        "windows-mcp",
+        "serve",
+        "--control-policy",
+        "strict"
+      ],
+      "env": {
+        "ANONYMIZED_TELEMETRY": "false"
+      }
+    }
+  }
+}
