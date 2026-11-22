@@ -9,7 +9,6 @@ import "codemirror/addon/edit/closebrackets";
 import "codemirror/addon/edit/matchbrackets";
 import "codemirror/addon/fold/foldgutter";
 import "codemirror/addon/fold/brace-fold";
-import "codemirror/addon/selection/active-line";
 import "codemirror/mode/css/css";
 import "codemirror/mode/htmlmixed/htmlmixed";
 import "codemirror/mode/javascript/javascript";
@@ -19,8 +18,8 @@ import "codemirror/mode/markdown/markdown";
 import "codemirror/mode/python/python";
 import "codemirror/mode/clike/clike";
 import "codemirror/mode/sql/sql";
-import { ArrowLeft, Bot, Braces, Check, ChevronDown, ChevronRight, CircleAlert, Code2, FileCode2, FileJson2, FilePlus2, FileText, Folder, FolderOpen, FolderPlus, Monitor, PanelRight, Play, Save, Search, Send, Smartphone, Sparkles, Terminal, Trash2, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type FormEvent, type PointerEvent, type ReactNode } from "react";
+import { ArrowLeft, Bot, Braces, Check, ChevronDown, ChevronRight, CircleAlert, Code2, FileCode2, FileJson2, FilePlus2, FileText, Folder, FolderOpen, FolderPlus, Monitor, PanelRight, Play, Save, Search, Send, Smartphone, Sparkles, Terminal, Trash2, Upload, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent, type ReactNode } from "react";
 import { apiRequest } from "@/lib/browser-api";
 
 type WorkspaceFile = { name: string; content: string };
@@ -40,6 +39,9 @@ const starterFiles: WorkspaceFile[] = [
 ];
 
 const allowedExtensions = new Set(["html", "htm", "css", "js", "mjs", "cjs", "jsx", "ts", "tsx", "php", "json"]);
+const maxWorkspaceFileBytes = 1024 * 1024;
+const maxWorkspaceBytes = 20 * 1024 * 1024;
+const maxWorkspaceFiles = 50;
 
 function extensionOf(name: string) {
   return name.split(".").at(-1)?.toLowerCase() ?? "";
@@ -222,7 +224,6 @@ function CodeMirrorEditor({ value, mode, theme, onChange, ariaLabel }: { value: 
       gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
       matchBrackets: true,
       autoCloseBrackets: true,
-      styleActiveLine: true,
       extraKeys: {
         "Ctrl-/": "toggleComment",
         "Cmd-/": "toggleComment",
@@ -265,6 +266,7 @@ export default function CodeStudio() {
   const [files, setFiles] = useState<WorkspaceFile[]>(starterFiles);
   const [folders, setFolders] = useState<string[]>([]);
   const [activeName, setActiveName] = useState("index.html");
+  const [openTabs, setOpenTabs] = useState(starterFiles.map((file) => file.name));
   const [ready, setReady] = useState(false);
   const [cloudSyncEnabled, setCloudSyncEnabled] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("loading");
@@ -286,6 +288,7 @@ export default function CodeStudio() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [newFileOpen, setNewFileOpen] = useState(false);
+  const [isImportingFiles, setIsImportingFiles] = useState(false);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFileName, setNewFileName] = useState("");
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -303,6 +306,7 @@ export default function CodeStudio() {
   const previewRef = useRef<HTMLIFrameElement>(null);
   const runButtonRef = useRef<HTMLButtonElement>(null);
   const terminalInputRef = useRef<HTMLInputElement>(null);
+  const localFileInputRef = useRef<HTMLInputElement>(null);
   const nextLogId = useRef(1);
   const nextAiMessageId = useRef(1);
   const aiMessagesEndRef = useRef<HTMLDivElement>(null);
@@ -315,7 +319,7 @@ export default function CodeStudio() {
     return () => observer.disconnect();
   }, []);
 
-  const activeFile = files.find((file) => file.name === activeName) ?? files[0];
+  const activeFile = files.find((file) => file.name === activeName);
   const activeExtension = activeFile ? extensionOf(activeFile.name) : "";
   const searchQuery = explorerSearch.trim().toLowerCase();
   const searchMatches = useMemo(() => searchQuery
@@ -357,12 +361,14 @@ export default function CodeStudio() {
         if (remote.files.length) {
           setFiles(remote.files);
           setActiveName(remote.files[0].name);
+          setOpenTabs(remote.files.slice(0, 4).map((file) => file.name));
           setSyncState("saved");
           setSyncMessage("Sinkron cloud aktif");
         } else if (localFiles.length) {
           setFiles(localFiles);
           setFolders(localFolders);
           setActiveName(localFiles[0].name);
+          setOpenTabs(localFiles.slice(0, 4).map((file) => file.name));
           setSyncState("local");
           setSyncMessage("Mengirim workspace lokal ke cloud");
         } else {
@@ -375,6 +381,7 @@ export default function CodeStudio() {
           setFiles(localFiles);
           setFolders(localFolders);
           setActiveName(localFiles[0].name);
+          setOpenTabs(localFiles.slice(0, 4).map((file) => file.name));
         }
         if ((error as Error & { status?: number }).status === 401) {
           setSyncState("local");
@@ -512,10 +519,83 @@ export default function CodeStudio() {
     setExpandedFolders((current) => new Set([...current, ...newFolders]));
     setFiles((current) => [...current, { name: filePath, content: defaultFileContent(filePath) }]);
     setActiveName(filePath);
+    setOpenTabs((current) => current.includes(filePath) ? current : [...current, filePath]);
     setActivePanel("editor");
     setNewFileName("");
     setNewFileError("");
     setNewFileOpen(false);
+  }
+
+  async function importLocalFiles(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(event.currentTarget.files ?? []);
+    event.currentTarget.value = "";
+    if (!selectedFiles.length || !ready || isImportingFiles) return;
+
+    setIsImportingFiles(true);
+    const importedFiles: WorkspaceFile[] = [];
+    const skippedFiles: string[] = [];
+    const knownNames = new Set(files.map((file) => file.name.toLowerCase()));
+    let workspaceBytes = files.reduce((total, file) => total + new TextEncoder().encode(file.content).byteLength, 0);
+
+    for (const localFile of selectedFiles) {
+      const name = localFile.name;
+      const normalizedName = name.toLowerCase();
+      if (!isValidWorkspacePath(name) || !allowedExtensions.has(extensionOf(name))) {
+        skippedFiles.push(`${name} (nama atau format tidak didukung)`);
+        continue;
+      }
+      if (knownNames.has(normalizedName)) {
+        skippedFiles.push(`${name} (nama sudah ada)`);
+        continue;
+      }
+      if (files.length + importedFiles.length >= maxWorkspaceFiles) {
+        skippedFiles.push(`${name} (maksimal ${maxWorkspaceFiles} file)`);
+        continue;
+      }
+      if (localFile.size > maxWorkspaceFileBytes) {
+        skippedFiles.push(`${name} (lebih dari 1 MB)`);
+        continue;
+      }
+
+      try {
+        const content = await localFile.text();
+        const contentBytes = new TextEncoder().encode(content).byteLength;
+        if (contentBytes > maxWorkspaceFileBytes) {
+          skippedFiles.push(`${name} (lebih dari 1 MB)`);
+          continue;
+        }
+        if (workspaceBytes + contentBytes > maxWorkspaceBytes) {
+          skippedFiles.push(`${name} (workspace melebihi 20 MB)`);
+          continue;
+        }
+        importedFiles.push({ name, content });
+        knownNames.add(normalizedName);
+        workspaceBytes += contentBytes;
+      } catch {
+        skippedFiles.push(`${name} (gagal dibaca)`);
+      }
+    }
+
+    if (importedFiles.length) {
+      setFiles((current) => {
+        const currentNames = new Set(current.map((file) => file.name.toLowerCase()));
+        const additions = importedFiles.filter((file) => !currentNames.has(file.name.toLowerCase()));
+        return [...current, ...additions].slice(0, maxWorkspaceFiles);
+      });
+      setActiveName(importedFiles[0].name);
+      setOpenTabs((current) => Array.from(new Set([...current, ...importedFiles.map((file) => file.name)])));
+      setActivePanel("editor");
+      setIsDirty(true);
+    }
+
+    const skippedSummary = skippedFiles.length
+      ? ` Dilewati: ${skippedFiles.slice(0, 3).join(", ")}${skippedFiles.length > 3 ? `, dan ${skippedFiles.length - 3} file lainnya` : ""}.`
+      : "";
+    setOutputOpen(true);
+    addOutput(importedFiles.length
+      ? `${importedFiles.length} file berhasil diimport.${skippedSummary}`
+      : `Tidak ada file yang diimport.${skippedSummary}`, importedFiles.length ? "info" : "error");
+    setIsImportingFiles(false);
   }
 
   function openRenameDialog() {
@@ -537,6 +617,7 @@ export default function CodeStudio() {
     }
     setFiles((current) => current.map((file) => file.name === activeFile.name ? { ...file, name: nextName } : file));
     setActiveName(nextName);
+    setOpenTabs((current) => current.map((name) => name === activeFile.name ? nextName : name));
     setFolders((current) => current.map((folder) => {
       if (folder === activeFile.name) return nextName;
       if (activeFile.name.includes("/") && folder === activeFile.name.slice(0, activeFile.name.lastIndexOf("/"))) {
@@ -576,14 +657,25 @@ export default function CodeStudio() {
       return;
     }
     const remaining = files.filter((file) => file.name !== name);
+    const remainingTabs = openTabs.filter((tab) => tab !== name);
+    const nextActiveName = remainingTabs[0] ?? remaining[0]?.name ?? "";
     setIsDirty(true);
     setFiles(remaining);
-    if (activeName === name) setActiveName(remaining[0].name);
+    setOpenTabs(remainingTabs.length || !nextActiveName ? remainingTabs : [nextActiveName]);
+    if (activeName === name) setActiveName(nextActiveName);
+  }
+
+  function closeFileTab(name: string) {
+    const tabIndex = openTabs.indexOf(name);
+    const remainingTabs = openTabs.filter((tab) => tab !== name);
+    setOpenTabs(remainingTabs);
+    if (activeName === name) setActiveName(remainingTabs[tabIndex] ?? remainingTabs[tabIndex - 1] ?? "");
   }
 
   function selectFile(name: string) {
     setActiveFolder(parentFolderPaths(name).at(-1) ?? "");
     setActiveName(name);
+    setOpenTabs((current) => current.includes(name) ? current : [...current, name]);
     setActivePanel("editor");
     if (["tsx", "jsx"].includes(extensionOf(name))) {
       setPreviewSize((current) => current === "pixel" ? "pixel" : "iphone");
@@ -658,7 +750,7 @@ export default function CodeStudio() {
     try {
       let remainingContext = 48 * 1024;
       const contextFiles = [activeFile, ...files.filter((file) => file.name !== activeFile?.name)].flatMap((file) => {
-        if (remainingContext <= 0) return [];
+        if (!file || remainingContext <= 0) return [];
         const content = file.content.slice(0, remainingContext);
         remainingContext -= new TextEncoder().encode(content).byteLength;
         return [{ name: file.name, content }];
@@ -691,6 +783,7 @@ export default function CodeStudio() {
     const replacements = new Map(validChanges.map((change) => [change.name, change.content]));
     setFiles((current) => current.map((file) => replacements.has(file.name) ? { ...file, content: replacements.get(file.name) ?? file.content } : file));
     setActiveName(validChanges[0].name);
+    setOpenTabs((current) => current.includes(validChanges[0].name) ? current : [...current, validChanges[0].name]);
     setActivePanel("editor");
     setIsDirty(true);
     setAiMessages((current) => current.map((item) => item.id === message.id ? { ...item, applied: true } : item));
@@ -851,6 +944,7 @@ export default function CodeStudio() {
 
     {mobileMenuOpen && <div className="code-mobile-menu" role="menu">
       <button type="button" role="menuitem" onClick={() => { setNewFileOpen(true); setActivePanel("explorer"); setMobileMenuOpen(false); }}><FilePlus2 size={15} /><span>Berkas baru</span></button>
+      <button type="button" role="menuitem" disabled={!ready || isImportingFiles} onClick={() => { setMobileMenuOpen(false); localFileInputRef.current?.click(); }}><Upload size={15} /><span>Import dari perangkat</span></button>
       <button type="button" role="menuitem" onClick={() => { void saveWorkspace(); setMobileMenuOpen(false); }}><Save size={15} /><span>Simpan</span></button>
       <button type="button" role="menuitem" onClick={() => { setNewFileOpen(true); setActivePanel("explorer"); setMobileMenuOpen(false); }}><Save size={15} /><span>Simpan sebagai</span></button>
       <button type="button" role="menuitem" onClick={() => setActivePanel("explorer")}><Folder size={15} /><span>Berkas</span></button>
@@ -880,7 +974,9 @@ export default function CodeStudio() {
           <button type="button" aria-label="Akun pengguna"><CircleAlert size={20} /></button>
         </nav>
         <button type="button" className="code-explorer-project" onClick={() => setActiveFolder("")}><ChevronDown size={13} /><strong>PROJECT SAYA</strong></button>
+        <input ref={localFileInputRef} type="file" hidden multiple accept=".html,.htm,.css,.js,.mjs,.cjs,.jsx,.ts,.tsx,.php,.json" onChange={importLocalFiles} />
         <div className="code-explorer-actions">
+          <button type="button" aria-label="Import file dari perangkat" title={isImportingFiles ? "Mengimpor file" : "Import file dari perangkat"} disabled={!ready || isImportingFiles} onClick={() => localFileInputRef.current?.click()}><Upload size={15} /></button>
           <button type="button" aria-label="File baru" onClick={() => { setNewFileOpen((open) => !open); setNewFolderOpen(false); setNewFileError(""); }}><FilePlus2 size={15} /></button>
           <button type="button" aria-label="Folder baru" onClick={toggleFolderDialog}><FolderPlus size={15} /></button>
           <button type="button" aria-label="Simpan semua" onClick={() => void saveWorkspace()}><Save size={14} /></button>
@@ -908,7 +1004,10 @@ export default function CodeStudio() {
       <main className="code-main-panes" ref={mainPanesRef} style={{ gridTemplateColumns: `${paneRatio}fr 8px ${100 - paneRatio}fr` }}>
         <section id="code-editor-panel" className={`code-editor-column ${activePanel === "editor" ? "is-mobile-active" : ""}`} aria-label="Editor kode dan terminal">
           <div className="code-editor-tabs">
-            {files.slice(0, 4).map((file) => <button type="button" key={file.name} className={`code-open-file-tab ${activeName === file.name ? "is-active" : ""}`} onClick={() => selectFile(file.name)}>{fileTypeIcon(file.name)}<span>{file.name.split("/").at(-1)}</span><X size={11} /></button>)}
+            {openTabs.map((name) => files.find((file) => file.name === name)).filter((file): file is WorkspaceFile => Boolean(file)).map((file) => <div key={file.name} className={`code-open-file-tab ${activeName === file.name ? "is-active" : ""}`}>
+              <button type="button" className="code-open-file-select" onClick={() => selectFile(file.name)}>{fileTypeIcon(file.name)}<span>{file.name.split("/").at(-1)}</span></button>
+              <button type="button" className="code-open-file-close" aria-label={`Tutup tab ${file.name}`} title={`Tutup ${file.name}`} onClick={() => closeFileTab(file.name)}><X size={11} /></button>
+            </div>)}
             <button type="button" className="code-mobile-problems" aria-label="Masalah"><CircleAlert size={12} /><span>Masalah</span></button>
           </div>
           <div className="code-editor-body">
