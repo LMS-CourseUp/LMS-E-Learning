@@ -4777,6 +4777,13 @@ body, :root[data-theme="dark"] body {
     box-shadow: none !important;
     -webkit-tap-highlight-color: transparent;
   }
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:hover,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:focus,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:focus-visible,
+  .code-route-shell .code-explorer.is-mobile-open .code-file-row > button:active {
+    background: transparent !important;
+  }
   .code-route-shell .code-explorer.is-mobile-open .code-file-row::before,
   .code-route-shell .code-explorer.is-mobile-open .code-file-row::after,
   .code-route-shell .code-explorer.is-mobile-open .code-folder-row::before,
