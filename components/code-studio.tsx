@@ -302,6 +302,8 @@ export default function CodeStudio() {
   const [terminalHeight, setTerminalHeight] = useState(190);
   const [terminalCommand, setTerminalCommand] = useState("");
   const [paneRatio, setPaneRatio] = useState(56);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMoreButtonRef = useRef<HTMLButtonElement>(null);
   const mainPanesRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLIFrameElement>(null);
   const runButtonRef = useRef<HTMLButtonElement>(null);
@@ -318,6 +320,18 @@ export default function CodeStudio() {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (mobileMenuRef.current?.contains(target) || mobileMoreButtonRef.current?.contains(target)) return;
+      setMobileMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePointer);
+  }, [mobileMenuOpen]);
 
   const activeFile = files.find((file) => file.name === activeName);
   const activeExtension = activeFile ? extensionOf(activeFile.name) : "";
@@ -932,7 +946,7 @@ export default function CodeStudio() {
       <div className="code-mobile-current-name"><strong>{activeFile?.name ?? "Pilih file"}</strong><span>.../project/{activeFile?.name ?? "file"}</span></div>
       <button type="button" className="code-mobile-edit-name" aria-label="Edit nama file" title="Edit nama file" onClick={openRenameDialog}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
       <button type="button" className="code-mobile-header-search" aria-label="Cari dalam berkas" title="Cari dalam berkas" onClick={() => setMobileSearchOpen(true)}><Search size={16} /></button>
-      <button type="button" className="code-mobile-more-button" aria-label="Menu berkas" title="Menu berkas" onClick={() => setMobileMenuOpen((open) => !open)}><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" /></svg></button>
+      <button ref={mobileMoreButtonRef} type="button" className="code-mobile-more-button" aria-label="Menu berkas" title="Menu berkas" onClick={() => setMobileMenuOpen((open) => !open)}><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" /></svg></button>
       <div className="code-brand"><span className="code-brand-mark"><Code2 size={16} /></span><strong>Editor <span>Kode</span></strong><span className="code-project-name">Project Saya</span></div>
       <div className="code-top-actions">
         <span className={`code-sync-state is-${isDirty ? "saving" : syncState}`} title={isDirty ? "Perubahan belum tersimpan" : syncMessage}><span className="code-sync-dot" />{isDirty ? "Belum disimpan" : syncState === "loading" ? "Memuat" : syncState === "saving" ? "Menyimpan" : syncState === "saved" ? "Tersimpan" : syncState === "local" ? "Lokal" : "Offline"}</span>
@@ -942,7 +956,7 @@ export default function CodeStudio() {
       </div>
     </header>
 
-    {mobileMenuOpen && <div className="code-mobile-menu" role="menu">
+    {mobileMenuOpen && <div ref={mobileMenuRef} className="code-mobile-menu" role="menu">
       <button type="button" role="menuitem" onClick={() => { setNewFileOpen(true); setActivePanel("explorer"); setMobileMenuOpen(false); }}><FilePlus2 size={15} /><span>Berkas baru</span></button>
       <button type="button" role="menuitem" disabled={!ready || isImportingFiles} onClick={() => { setMobileMenuOpen(false); localFileInputRef.current?.click(); }}><Upload size={15} /><span>Import dari perangkat</span></button>
       <button type="button" role="menuitem" onClick={() => { void saveWorkspace(); setMobileMenuOpen(false); }}><Save size={15} /><span>Simpan</span></button>
