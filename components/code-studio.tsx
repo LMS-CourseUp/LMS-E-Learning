@@ -19,7 +19,7 @@ import "codemirror/mode/python/python";
 import "codemirror/mode/clike/clike";
 import "codemirror/mode/sql/sql";
 import { ArrowLeft, Bot, Braces, Check, ChevronDown, ChevronRight, CircleAlert, Code2, FileCode2, FileJson2, FilePlus2, FileText, Folder, FolderOpen, FolderPlus, Monitor, PanelRight, Play, Save, Search, Send, Smartphone, Sparkles, Terminal, Trash2, Upload, UserRound, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { apiRequest } from "@/lib/browser-api";
 
 type WorkspaceFile = { name: string; content: string };
