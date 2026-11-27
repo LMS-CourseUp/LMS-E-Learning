@@ -4837,3 +4837,59 @@ body, :root[data-theme="dark"] body {
     z-index: 170 !important;
   }
 }
+
+@media (max-width: 800px) {
+  .code-route-shell .code-dialog {
+    border-color: #3d3d3d;
+    color: #ededed;
+    background: #202124;
+  }
+  .code-route-shell .code-dialog h2 { color: #ededed; }
+  .code-route-shell .code-dialog > p { color: #b0b0b0; }
+  .code-route-shell .code-dialog-icon {
+    border-color: #4a4a4a;
+    color: #d4d4d4;
+    background: #252526;
+  }
+  .code-route-shell .code-dialog-close,
+  .code-route-shell .code-dialog-close:hover,
+  .code-route-shell .code-dialog-close:focus,
+  .code-route-shell .code-dialog-close:focus-visible,
+  .code-route-shell .code-dialog-close:active {
+    border: 0;
+    outline: none;
+    color: #d4d4d4;
+    background: #2a2a2a;
+    box-shadow: none;
+  }
+  .code-route-shell .code-dialog-close:focus-visible { outline: 1px solid #777; outline-offset: 2px; }
+  .code-route-shell .code-dialog-file-name { color: #bdbdbd; }
+  .code-route-shell .code-dialog-file-name input {
+    border-color: #454545;
+    color: #ededed;
+    background: #1e1e1e;
+  }
+  .code-route-shell .code-dialog-file-name input:focus { border-color: #777; }
+  .code-route-shell .code-dialog-secondary {
+    border-color: #454545;
+    color: #e0e0e0;
+    background: #2a2a2a;
+  }
+  .code-route-shell .code-dialog-secondary:hover,
+  .code-route-shell .code-dialog-secondary:focus,
+  .code-route-shell .code-dialog-secondary:focus-visible,
+  .code-route-shell .code-dialog-secondary:active {
+    border-color: #5a5a5a;
+    color: #ededed;
+    background: #383838;
+    box-shadow: none;
+  }
+  .code-route-shell .code-dialog-secondary:focus { outline: none; }
+  .code-route-shell .code-dialog-secondary:focus-visible { outline: 1px solid #777; outline-offset: 2px; }
+  .code-route-shell .code-dialog .code-dialog-primary {
+    border-color: #5a5a5a;
+    color: #f1f1f1;
+    background: #3a3a3a;
+  }
+  .code-route-shell .code-dialog .code-dialog-primary:hover:not(:disabled) { background: #4a4a4a; }
+}
