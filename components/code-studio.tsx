@@ -18,7 +18,7 @@ import "codemirror/mode/markdown/markdown";
 import "codemirror/mode/python/python";
 import "codemirror/mode/clike/clike";
 import "codemirror/mode/sql/sql";
-import { ArrowLeft, Bot, Braces, Check, ChevronDown, ChevronRight, CircleAlert, Code2, FileCode2, FileJson2, FilePlus2, FileText, Folder, FolderOpen, FolderPlus, Monitor, PanelRight, Play, Save, Search, Send, Smartphone, Sparkles, Terminal, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, Bot, Braces, Check, ChevronDown, ChevronRight, CircleAlert, Code2, FileCode2, FileJson2, FilePlus2, FileText, Folder, FolderOpen, FolderPlus, Monitor, PanelRight, Play, Save, Search, Send, Smartphone, Sparkles, Terminal, Trash2, Upload, UserRound, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent, type ReactNode } from "react";
 import { apiRequest } from "@/lib/browser-api";
 
@@ -1055,7 +1055,7 @@ export default function CodeStudio() {
       <aside id="code-explorer-panel" className={`code-explorer ${activePanel === "explorer" ? "is-mobile-open" : ""}`} aria-label="Explorer project">
         <nav className="code-mobile-activity-rail" aria-label="Activity bar">
           <div><button type="button" className="is-active" aria-label="Explorer"><Folder size={20} /></button><button type="button" aria-label="Search" onClick={() => setMobileSearchOpen(true)}><Search size={20} /></button><button type="button" aria-label="Extensions"><Sparkles size={20} /></button><button type="button" aria-label="Favorites"><CircleAlert size={20} /></button><button type="button" aria-label="Source Control"><Terminal size={20} /></button></div>
-          <button type="button" aria-label="Akun pengguna"><CircleAlert size={20} /></button>
+          <button type="button" aria-label="Akun pengguna"><UserRound size={20} /></button>
         </nav>
         <button type="button" className="code-explorer-project" onClick={() => setActiveFolder("")}><ChevronDown size={13} /><strong>PROJECT SAYA</strong></button>
         <input ref={localFileInputRef} type="file" hidden multiple accept=".html,.htm,.css,.js,.mjs,.cjs,.jsx,.ts,.tsx,.php,.json" onChange={importLocalFiles} />
