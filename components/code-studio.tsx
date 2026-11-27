@@ -202,7 +202,7 @@ function createPhpDocument(htmlText: string) {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"></head><body>${htmlText}</body></html>`;
 }
 
-function CodeMirrorEditor({ value, mode, theme, onChange, ariaLabel }: { value: string; mode: string; theme: string; onChange: (value: string) => void; ariaLabel: string }) {
+function CodeMirrorEditor({ value, mode, theme, onChange, ariaLabel, editorInstanceRef }: { value: string; mode: string; theme: string; onChange: (value: string) => void; ariaLabel: string; editorInstanceRef: { current: CodeMirror.Editor | null } }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const editorRef = useRef<CodeMirror.Editor | null>(null);
   const onChangeRef = useRef(onChange);
@@ -236,11 +236,13 @@ function CodeMirrorEditor({ value, mode, theme, onChange, ariaLabel }: { value: 
     editor.getWrapperElement().classList.add("code-editor-cm");
     editor.on("change", handleChange);
     editorRef.current = editor;
+    editorInstanceRef.current = editor;
 
     return () => {
       editor.off("change", handleChange);
       editor.toTextArea();
       editorRef.current = null;
+      editorInstanceRef.current = null;
     };
   }, []);
 
@@ -302,6 +304,9 @@ export default function CodeStudio() {
   const [terminalHeight, setTerminalHeight] = useState(190);
   const [terminalCommand, setTerminalCommand] = useState("");
   const [paneRatio, setPaneRatio] = useState(56);
+  const [mobileControlActive, setMobileControlActive] = useState(false);
+  const [mobileShiftActive, setMobileShiftActive] = useState(false);
+  const mobileEditorRef = useRef<CodeMirror.Editor | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const mobileMoreButtonRef = useRef<HTMLButtonElement>(null);
   const mainPanesRef = useRef<HTMLDivElement>(null);
@@ -333,6 +338,30 @@ export default function CodeStudio() {
     return () => document.removeEventListener("pointerdown", closeOnOutsidePointer);
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    if (!mobileControlActive) return;
+    const handleMobileControlKey = (event: KeyboardEvent) => {
+      const editor = mobileEditorRef.current;
+      const target = event.target;
+      if (!editor || !(target instanceof Node) || !editor.getWrapperElement().closest(".code-studio")?.contains(target)) return;
+      const commands: Record<string, string> = {
+        a: "selectAll",
+        z: "undo",
+        y: "redo",
+      };
+      const command = commands[event.key.toLowerCase()];
+      if (!command) return;
+      event.preventDefault();
+      event.stopPropagation();
+      editor.focus();
+      editor.setExtending(false);
+      editor.execCommand(command);
+      setMobileControlActive(false);
+    };
+    document.addEventListener("keydown", handleMobileControlKey, true);
+    return () => document.removeEventListener("keydown", handleMobileControlKey, true);
+  }, [mobileControlActive]);
+
   const activeFile = files.find((file) => file.name === activeName);
   const activeExtension = activeFile ? extensionOf(activeFile.name) : "";
   const searchQuery = explorerSearch.trim().toLowerCase();
@@ -349,6 +378,47 @@ export default function CodeStudio() {
     if (phpMode) return "PHP + WEB";
     return "WEB · HTML / CSS / JS";
   }, [nativeMode, phpMode]);
+
+  function insertMobileEditorText(text: string) {
+    const editor = mobileEditorRef.current;
+    if (!editor) return;
+    editor.focus();
+    editor.replaceSelection(text, "end");
+  }
+
+  function moveMobileEditorCursor(direction: "left" | "right" | "up" | "down") {
+    const editor = mobileEditorRef.current;
+    if (!editor) return;
+    editor.focus();
+    editor.setExtending(mobileShiftActive);
+    const command = direction === "left"
+      ? mobileControlActive ? "goWordLeft" : "goCharLeft"
+      : direction === "right"
+        ? mobileControlActive ? "goWordRight" : "goCharRight"
+        : direction === "up" ? "goLineUp" : "goLineDown";
+    editor.execCommand(command);
+  }
+
+  function handleMobileEditorEnter() {
+    const editor = mobileEditorRef.current;
+    if (!editor) return;
+    if (mobileControlActive) {
+      setMobileControlActive(false);
+      setMobileShiftActive(false);
+      editor.setExtending(false);
+      void runCode();
+      return;
+    }
+    editor.focus();
+    editor.execCommand("newlineAndIndent");
+  }
+
+  function clearMobileEditorModifiers() {
+    setMobileControlActive(false);
+    setMobileShiftActive(false);
+    mobileEditorRef.current?.setExtending(false);
+    mobileEditorRef.current?.focus();
+  }
 
   useEffect(() => {
     let active = true;
@@ -1032,15 +1102,16 @@ export default function CodeStudio() {
               theme={editorDarkMode || (typeof window !== "undefined" && window.matchMedia("(max-width: 800px)").matches) ? "material-darker" : "default"}
               onChange={updateActiveContent}
               ariaLabel={`Editor ${activeFile?.name ?? "kode"}`}
+              editorInstanceRef={mobileEditorRef}
             />
             {!ready && <div className="code-editor-loading">Menyiapkan workspace...</div>}
           </div>
           <div className="code-editor-status"><span>{activeFile?.name ?? ""}</span><span>{activeExtension.toUpperCase()}</span><span>UTF-8</span><span>LF</span><span>Spaces: 2</span></div>
           <div className="code-mobile-shortcuts" aria-label="Pintasan keyboard mobile">
-            <div><button type="button">CTRL</button><button type="button" onClick={() => updateActiveContent(`${activeFile?.content ?? ""}  `)}>→|</button><button type="button">SHFT</button></div>
-            <div><button type="button" title="Simpan" onClick={() => void saveWorkspace()}><Save size={14} /></button><button type="button" title="Cari" onClick={() => setMobileSearchOpen(true)}><Search size={14} /></button><button type="button" title="Preview" onClick={() => void runCode()}><Play size={14} /></button><button type="button">ESC</button></div>
+            <div><button type="button" className={mobileControlActive ? "is-active" : ""} aria-pressed={mobileControlActive} onClick={() => { setMobileControlActive((active) => !active); mobileEditorRef.current?.focus(); }}>CTRL</button><button type="button" title="Indentasi" onClick={() => { const editor = mobileEditorRef.current; if (!editor) return; editor.focus(); editor.execCommand(mobileShiftActive ? "indentLess" : "indentMore"); }}>→|</button><button type="button" className={mobileShiftActive ? "is-active" : ""} aria-pressed={mobileShiftActive} onClick={() => { const active = !mobileShiftActive; setMobileShiftActive(active); mobileEditorRef.current?.setExtending(active); mobileEditorRef.current?.focus(); }}>SHFT</button></div>
+            <div><button type="button" title="Simpan" onClick={() => void saveWorkspace()}><Save size={14} /></button><button type="button" title="Cari" onClick={() => setMobileSearchOpen(true)}><Search size={14} /></button><button type="button" title="Preview" onClick={() => void runCode()}><Play size={14} /></button><button type="button" title="Batalkan modifier" onClick={clearMobileEditorModifiers}>ESC</button></div>
           </div>
-          <div className="code-mobile-direction-keys" aria-label="Navigasi kursor"><button type="button">&lt;</button><button type="button">&gt;</button><button type="button">↑</button><button type="button">↓</button><button type="button">↵</button><button type="button">←</button><button type="button">→</button></div>
+          <div className="code-mobile-direction-keys" aria-label="Navigasi kursor"><button type="button" aria-label="Sisipkan tanda kurang dari" onClick={() => insertMobileEditorText("<")}>&lt;</button><button type="button" aria-label="Sisipkan tanda lebih dari" onClick={() => insertMobileEditorText(">")}>&gt;</button><button type="button" aria-label="Pindah ke baris sebelumnya" onClick={() => moveMobileEditorCursor("up")}>↑</button><button type="button" aria-label="Pindah ke baris berikutnya" onClick={() => moveMobileEditorCursor("down")}>↓</button><button type="button" aria-label="Baris baru" onClick={handleMobileEditorEnter}>↵</button><button type="button" aria-label="Pindah ke kiri" onClick={() => moveMobileEditorCursor("left")}>←</button><button type="button" aria-label="Pindah ke kanan" onClick={() => moveMobileEditorCursor("right")}>→</button></div>
           <div className="code-mobile-home-indicator"><span /></div>
           <div className="code-terminal-resize" role="separator" aria-orientation="horizontal" aria-label="Ubah tinggi terminal" onPointerDown={handleTerminalResize}><span /></div>
           <section className={`code-terminal-panel ${outputOpen ? "is-open" : "is-collapsed"}`} style={{ height: outputOpen ? `${terminalHeight}px` : "34px" }} aria-label="Terminal output">
