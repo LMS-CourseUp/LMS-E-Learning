@@ -19,7 +19,7 @@ import "codemirror/mode/python/python";
 import "codemirror/mode/clike/clike";
 import "codemirror/mode/sql/sql";
 import { ArrowLeft, Bot, Braces, Check, ChevronDown, ChevronRight, CircleAlert, Code2, FileCode2, FileJson2, FilePlus2, FileText, Folder, FolderOpen, FolderPlus, Monitor, PanelRight, Play, Save, Search, Send, Smartphone, Sparkles, Terminal, Trash2, Upload, UserRound, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { apiRequest } from "@/lib/browser-api";
 
 type WorkspaceFile = { name: string; content: string };
@@ -328,7 +328,7 @@ export default function CodeStudio() {
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
-    const closeOnOutsidePointer = (event: PointerEvent) => {
+    const closeOnOutsidePointer = (event: globalThis.PointerEvent) => {
       const target = event.target;
       if (!(target instanceof Node)) return;
       if (mobileMenuRef.current?.contains(target) || mobileMoreButtonRef.current?.contains(target)) return;
@@ -971,7 +971,7 @@ export default function CodeStudio() {
     addOutput("Preview diperbarui. Buka console untuk melihat log JavaScript.", "info");
   }
 
-  function handleDividerDown(event: PointerEvent<HTMLDivElement>) {
+  function handleDividerDown(event: ReactPointerEvent<HTMLDivElement>) {
     const container = mainPanesRef.current;
     if (!container) return;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -990,7 +990,7 @@ export default function CodeStudio() {
     container.addEventListener("pointercancel", stop, { once: true });
   }
 
-  function handleTerminalResize(event: PointerEvent<HTMLDivElement>) {
+  function handleTerminalResize(event: ReactPointerEvent<HTMLDivElement>) {
     const handle = event.currentTarget;
     const startY = event.clientY;
     const startHeight = terminalHeight;
